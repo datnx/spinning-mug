@@ -24,7 +24,7 @@
 
 #include "transform.h"
 #include "vertex.h"
-#include "load_models.h"
+#include "load_model.h"
 #include "light.h"
 #include "anti_alias.h"
 #include "memory.h"
