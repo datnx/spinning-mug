@@ -55,8 +55,8 @@ vec3 lit(vec3 l, vec3 n, vec3 v, vec3 warm) {
 
 void main() {
     vec4 texture_color = texture(texSampler, fragTexCoord);
-    vec3 cool = vec3(0.0, 0.0, 0.55) + 0.25 * texture_color.rgb;
-    vec3 warm = vec3(0.3, 0.3, 0.0) + 0.25 * texture_color.rgb;
+    vec3 cool = vec3(0.0, 0.0, 0.1) + 0.5 * texture_color.rgb;
+    vec3 warm = vec3(0.1, 0.1, 0.0) + 0.5 * texture_color.rgb;
     vec3 v = normalize(ubo.eye - vertex_pos);
     vec3 n = normalize(vertex_normal);
     outColor = vec4(0.5 * cool, texture_color.a);
