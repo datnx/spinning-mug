@@ -49,7 +49,7 @@ layout(location = 0) out vec4 outColor;
 vec3 lit(vec3 l, vec3 n, vec3 v, vec3 warm) {
     vec3 r_l = reflect(-l, n);
     float s = clamp(100.0 * dot(r_l, v) - 97.0, 0.0, 1.0);
-    vec3 highlightColor = vec3(2.0, 2.0, 2.0);
+    vec3 highlightColor = vec3(1.0, 1.0, 1.0);
     return mix(warm, highlightColor, s);
 }
 
