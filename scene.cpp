@@ -1,5 +1,9 @@
 #include "scene.h"
 
+Texture::Texture(std::string path) {
+	file_path = path;
+}
+
 int Scene::get_num_vertices() {
 	int count = 0;
 	for (int i = 0; i < meshes.size(); i++) {

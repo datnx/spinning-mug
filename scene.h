@@ -17,7 +17,9 @@ public:
 };
 
 class Texture {
-
+	std::string file_path;
+public:
+	Texture(std::string path);
 };
 
 class Scene {
