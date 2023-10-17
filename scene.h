@@ -16,9 +16,14 @@ public:
 	int vertex_offset;
 };
 
+class Texture {
+
+};
+
 class Scene {
 public:
 	std::vector<Mesh> meshes;
+	std::vector<Texture> textures;
 	light lights;
 	
 	// Get the total number of vertices in the scene
