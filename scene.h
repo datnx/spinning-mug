@@ -14,6 +14,7 @@ public:
 	std::string debug;
 	int index_offset;
 	int vertex_offset;
+	int texture_index;
 };
 
 class Texture {
