@@ -1264,23 +1264,30 @@ private:
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
+        // Bind view matrix, projection matrix, lights, eye position
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame * (3 + scene->meshes.size())], 0, nullptr);
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1, &descriptorSets[currentFrame * (3 + scene->meshes.size()) + 1], 0, nullptr);
+        // for each texture
+        for (int i = 0; i < scene->textures.size(); i++) {
+            
+            // bind the texture
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1,
+                &descriptorSets[currentFrame * (3 + scene->meshes.size()) + 1 + i], 0, nullptr);
 
-        for (int i = 0; i < scene->meshes.size(); i++) {
-            if (scene->meshes[i].material_name == "Texture_1") {
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, 1, &descriptorSets[currentFrame * (3 + scene->meshes.size()) + 3 + i], 0, nullptr);
-                vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(scene->meshes[i].indices.size()), 1, scene->meshes[i].index_offset, scene->meshes[i].vertex_offset, 0);
-            }
-        }
+            // for each mesh
+            for (int j = 0; j < scene->meshes.size(); j++) {
+                
+                // if the mesh use the ith texture
+                if (scene->meshes[j].texture_index == i) {
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1, &descriptorSets[currentFrame * (3 + scene->meshes.size()) + 2], 0, nullptr);
+                    // bind the model matrix
+                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, 1,
+                        &descriptorSets[currentFrame * (3 + scene->meshes.size()) + 1 + scene->textures.size() + j], 0, nullptr);
 
-        for (int i = 0; i < scene->meshes.size(); i++) {
-            if (scene->meshes[i].material_name == "Texture_2") {
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, 1, &descriptorSets[currentFrame * (3 + scene->meshes.size()) + 3 + i], 0, nullptr);
-                vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(scene->meshes[i].indices.size()), 1, scene->meshes[i].index_offset, scene->meshes[i].vertex_offset, 0);
+                    // draw call
+                    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(scene->meshes[j].indices.size()),
+                        1, scene->meshes[j].index_offset, scene->meshes[j].vertex_offset, 0);
+                }
             }
         }
 
