@@ -17,9 +17,8 @@ public:
 	int texture_index;
 };
 
-class Texture {
+struct Texture {
 	std::string file_path;
-public:
 	Texture(std::string path);
 };
 
