@@ -410,6 +410,9 @@ private:
 
             // free the loaded image data
             stbi_image_free(pixels[i]);
+
+            // update the offset
+            offset += imageSize[i];
         }
 
         // After copy is complete, unmap the GPU memory
