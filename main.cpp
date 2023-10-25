@@ -148,10 +148,9 @@ private:
 
     Scene* scene;
 
-    VkImage textureImage_1;
-    VkImage textureImage_2;
+    std::vector<VkImage> textureImage;
+    std::vector<VkImageView> textureImageView;
     VkDeviceMemory textureImageMemory;
-    VkImageView textureImageView_1, textureImageView_2;
     VkSampler textureSampler;
 
     uint64_t min_uboOffset;
@@ -220,8 +219,6 @@ private:
         createDepthResources();
         createFramebuffers();
         createCommandPool();
-        createTextureImages();
-        createTextureImageViews();
         createTextureSampler();
         createCommandBuffers();
         createSyncObjects();
@@ -241,6 +238,10 @@ private:
         }
         scene->textures.emplace_back("textures/Javorcsik_David_GameArtExam_Vendor_Tex.png");
         scene->textures.emplace_back("textures/Javorcsik_David_GameArtExam_Environment_Te.png");
+
+        // create VkImage and VkImageView for textures
+        createTextureImages();
+        createTextureImageViews();
 
         createVertexBuffer();
         createIndexBuffer();
@@ -280,10 +281,13 @@ private:
         cleanupSwapChain();
 
         vkDestroySampler(device, textureSampler, nullptr);
-        vkDestroyImageView(device, textureImageView_1, nullptr);
-        vkDestroyImageView(device, textureImageView_2, nullptr);
-        vkDestroyImage(device, textureImage_1, nullptr);
-        vkDestroyImage(device, textureImage_2, nullptr);
+
+        // destroy the VkImage and VkImageView
+        for (int i = 0; i < scene->textures.size(); i++) {
+            vkDestroyImageView(device, textureImageView[i], nullptr);
+            vkDestroyImage(device, textureImage[i], nullptr);
+        }
+        
         vkFreeMemory(device, textureImageMemory, nullptr);
 
         delete msaa;
@@ -351,67 +355,110 @@ private:
     }
 
     void createTextureImages() {
+        /*
+        Load images from files and create texture images
+        */
 
+        // staging buffer
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
 
-        int texWidth_1, texHeight_1, texChannels_1;
-        stbi_uc* pixels_1 = stbi_load("textures/Javorcsik_David_GameArtExam_Vendor_Tex.png", &texWidth_1, &texHeight_1, &texChannels_1, STBI_rgb_alpha);
-        VkDeviceSize imageSize_1 = texWidth_1 * texHeight_1 * 4;
-        if (!pixels_1) {
-            throw std::runtime_error("failed to load texture image!");
+        // image size
+        VkDeviceSize totalImageSize = 0;
+        std::vector<VkDeviceSize> imageSize;
+        imageSize.resize(scene->textures.size());
+        std::vector<int> texWidth;
+        texWidth.resize(scene->textures.size());
+        std::vector<int> texHeight;
+        texHeight.resize(scene->textures.size());
+
+        // image data
+        std::vector<stbi_uc*> pixels;
+        pixels.resize(scene->textures.size());
+
+        // load images from files
+        for (int i = 0; i < scene->textures.size(); i++) {
+            
+            // load the image using stb library
+            int texChannels;
+            pixels[i] = stbi_load(scene->textures[i].file_path.c_str(),
+                &texWidth[i], &texHeight[i], &texChannels, STBI_rgb_alpha);
+            if (!pixels[i]) throw std::runtime_error("failed to load texture image!");
+
+            // calculate image size
+            imageSize[i] = texWidth[i] * texHeight[i] * 4;
+            totalImageSize += imageSize[i];
+
         }
 
-        int texWidth_2, texHeight_2, texChannels_2;
-        stbi_uc* pixels_2 = stbi_load("textures/Javorcsik_David_GameArtExam_Environment_Te.png", &texWidth_2, &texHeight_2, &texChannels_2, STBI_rgb_alpha);
-        VkDeviceSize imageSize_2 = texWidth_2 * texHeight_2 * 4;
-        if (!pixels_2) {
-            throw std::runtime_error("failed to load texture image!");
-        }
+        // create staging buffer
+        memoryAllocator->createBuffer(totalImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-        memoryAllocator->createBuffer(imageSize_1 + imageSize_2, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
+        // map the staging buffer memory on the GPU to a memory block on the RAM
         void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, imageSize_1 + imageSize_2, 0, &data);
-        for (int i = 0; i < texHeight_1; i++) {
-            memcpy((char*)data + i * texWidth_1 * 4, pixels_1 + (texHeight_1 - 1 - i) * texWidth_1 * 4, texWidth_1 * 4);
+        vkMapMemory(device, stagingBufferMemory, 0, totalImageSize, 0, &data);
+
+        // copy the image data to the mapped memory
+        int offset = 0;
+        for (int i = 0; i < scene->textures.size(); i++) {
+            
+            // flip the memory layout vertically so that it can map correctly
+            for (int j = 0; j < texHeight[i]; j++) {
+                memcpy((char*)data + offset + j * texWidth[i] * 4, pixels[i] + (texHeight[i] - 1 - j) * texWidth[i] * 4, texWidth[i] * 4);
+            }
+
+            // free the loaded image data
+            stbi_image_free(pixels[i]);
         }
-        for (int i = 0; i < texHeight_2; i++) {
-            memcpy((char*)data + imageSize_1 + i * texWidth_2 * 4, pixels_2 + (texHeight_2 - 1 - i) * texWidth_2 * 4, texWidth_2 * 4);
-        }
+
+        // After copy is complete, unmap the GPU memory
         vkUnmapMemory(device, stagingBufferMemory);
 
-        stbi_image_free(pixels_1);
-        stbi_image_free(pixels_2);
+        // create the VkImages and get memory requirements
+        textureImage.resize(scene->textures.size());
+        std::vector<VkMemoryRequirements> memRequirements;
+        memRequirements.resize(scene->textures.size());
+        VkDeviceSize totalRequiredSize = 0;
+        uint32_t typeFilter = UINT32_MAX;
+        for (int i = 0; i < scene->textures.size(); i++) {
+            imageCreator->createImage(static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]),
+                VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, textureImage[i]);
+            vkGetImageMemoryRequirements(device, textureImage[i], &memRequirements[i]);
+            totalRequiredSize += memRequirements[i].size;
+            typeFilter &= memRequirements[i].memoryTypeBits;
+        }
 
-        imageCreator->createImage(static_cast<uint32_t>(texWidth_1), static_cast<uint32_t>(texHeight_1), VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, textureImage_1);
-        imageCreator->createImage(static_cast<uint32_t>(texWidth_2), static_cast<uint32_t>(texHeight_2), VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, textureImage_2);
+        // allocate memory
+        memoryAllocator->allocateMemory(totalRequiredSize,
+            memoryAllocator->findMemoryType(typeFilter, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT), textureImageMemory);
 
-        VkMemoryRequirements memRequirements_1;
-        vkGetImageMemoryRequirements(device, textureImage_1, &memRequirements_1);
+        // bind the VkImage to the memory and copy data from the staging buffer to the VkImage
+        VkDeviceSize memOffset = 0;
+        for (int i = 0; i < scene->textures.size(); i++) {
+            
+            // bind the VkImage
+            vkBindImageMemory(device, textureImage[i], textureImageMemory, memOffset);
 
-        VkMemoryRequirements memRequirements_2;
-        vkGetImageMemoryRequirements(device, textureImage_1, &memRequirements_2);
+            // copy data
+            transitionImageLayout(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            copyBufferToImage(stagingBuffer, memOffset, textureImage[i], static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]));
+            transitionImageLayout(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        memoryAllocator->allocateMemory(memRequirements_1.size + memRequirements_2.size, memoryAllocator->findMemoryType(memRequirements_1.memoryTypeBits & memRequirements_2.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT), textureImageMemory);
+            // update the offset
+            memOffset += memRequirements[i].size;
+        }
 
-        vkBindImageMemory(device, textureImage_1, textureImageMemory, 0);
-        vkBindImageMemory(device, textureImage_2, textureImageMemory, memRequirements_1.size);
-
-        transitionImageLayout(textureImage_1, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        copyBufferToImage(stagingBuffer, 0, textureImage_1, static_cast<uint32_t>(texWidth_1), static_cast<uint32_t>(texHeight_1));
-        transitionImageLayout(textureImage_1, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        transitionImageLayout(textureImage_2, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        copyBufferToImage(stagingBuffer, memRequirements_1.size, textureImage_2, static_cast<uint32_t>(texWidth_2), static_cast<uint32_t>(texHeight_2));
-        transitionImageLayout(textureImage_2, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
+        // free the staging buffer
         vkDestroyBuffer(device, stagingBuffer, nullptr);
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
     void createTextureImageViews() {
-        textureImageView_1 = imageCreator->createImageView(textureImage_1, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
-        textureImageView_2 = imageCreator->createImageView(textureImage_2, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+        textureImageView.resize(scene->textures.size());
+        for (int i = 0; i < scene->textures.size(); i++) {
+            textureImageView[i] = imageCreator->createImageView(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+        }
     }
 
     void createTextureSampler() {
@@ -1029,13 +1076,13 @@ private:
             VkDescriptorImageInfo& imageInfo_1 = imageInfos[i * MAX_FRAMES_IN_FLIGHT];
             imageInfo_1 = {};
             imageInfo_1.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo_1.imageView = textureImageView_1;
+            imageInfo_1.imageView = textureImageView[0];
             imageInfo_1.sampler = textureSampler;
 
             VkDescriptorImageInfo& imageInfo_2 = imageInfos[i * MAX_FRAMES_IN_FLIGHT + 1];
             imageInfo_2 = {};
             imageInfo_2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo_2.imageView = textureImageView_2;
+            imageInfo_2.imageView = textureImageView[1];
             imageInfo_2.sampler = textureSampler;
 
             VkWriteDescriptorSet& texture_1_descriptorWrite = descriptorWrites[i * (4 + scene->meshes.size()) + 2];
