@@ -1019,26 +1019,40 @@ private:
     }
 
     void createDescriptorSets() {
+        /*
+        create all the descriptor sets
+        */
+
+        // arrange the layouts
         std::vector<VkDescriptorSetLayout> layouts;
+        
+        // for each frame
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            
+            // this set is for view matrix, projection matrix
             layouts.push_back(descriptorSetLayout_0);
-            layouts.push_back(descriptorSetLayout_1);
-            layouts.push_back(descriptorSetLayout_1);
+
+            // these sets are for textures
+            for (int j = 0; j < scene->textures.size(); j++)
+                layouts.push_back(descriptorSetLayout_1);
+
+            // these sets are for model matrices
             for (int j = 0; j < scene->meshes.size(); j++)
                 layouts.push_back(descriptorSetLayout_2);
         }
+
+        // prepare for allocation
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
         allocInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
         allocInfo.pSetLayouts = layouts.data();
 
+        // allocate
         descriptorSets.resize(layouts.size());
         if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
-
-        std::cout << layouts.size() << std::endl;
 
         std::vector<VkWriteDescriptorSet> descriptorWrites;
         descriptorWrites.resize((4 + scene->meshes.size()) * MAX_FRAMES_IN_FLIGHT);
