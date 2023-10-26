@@ -31,8 +31,6 @@
 #include "image.h"
 #include "render_pass.h"
 #include "math.h"
-#include "transparent_square.h"
-#include "object.h"
 #include "scene.h"
 
 const uint32_t WIDTH = 800;
@@ -157,7 +155,6 @@ private:
 
     light all_lights;
     FragmentUniform fubo;
-    Object fruit_shop, square;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
