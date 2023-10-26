@@ -1054,108 +1054,92 @@ private:
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
 
+        // write to the descriptors
         std::vector<VkWriteDescriptorSet> descriptorWrites;
-        descriptorWrites.resize((4 + scene->meshes.size()) * MAX_FRAMES_IN_FLIGHT);
+        descriptorWrites.resize((2 + scene->textures.size() + scene->meshes.size()) * MAX_FRAMES_IN_FLIGHT);
         std::vector<VkDescriptorBufferInfo> bufferInfos;
         bufferInfos.resize((2 + scene->meshes.size()) * MAX_FRAMES_IN_FLIGHT);
         std::vector<VkDescriptorImageInfo> imageInfos;
-        imageInfos.resize(2 * MAX_FRAMES_IN_FLIGHT);
+        imageInfos.resize(scene->textures.size() * MAX_FRAMES_IN_FLIGHT);
         VkDeviceSize offset;
 
+        // for each frame, update the buffer info or the image info and the descriptor write of all descriptors
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 
+            // view matrix and projection matrix
             offset = i * (getAlignSize(sizeof(ViewProjectrion)) + getAlignSize(sizeof(FragmentUniform)) + scene->meshes.size() * getAlignSize(sizeof(glm::mat4)));
+            updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size())], uniformBuffers, offset, sizeof(ViewProjectrion));
+            updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size())],
+                descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1)], 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                &bufferInfos[i * (2 + scene->meshes.size())], nullptr);
 
-            VkDescriptorBufferInfo& view_projection_bufferInfo = bufferInfos[i * (2 + scene->meshes.size())];
-            view_projection_bufferInfo = {};
-            view_projection_bufferInfo.buffer = uniformBuffers;
-            view_projection_bufferInfo.offset = offset;
-            view_projection_bufferInfo.range = sizeof(ViewProjectrion);
-
-            VkWriteDescriptorSet& view_projection_descriptorWrite = descriptorWrites[i * (4 + scene->meshes.size())];
-            view_projection_descriptorWrite = {};
-            view_projection_descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            view_projection_descriptorWrite.dstSet = descriptorSets[i * (scene->meshes.size() + 3)];
-            view_projection_descriptorWrite.dstBinding = 0;
-            view_projection_descriptorWrite.dstArrayElement = 0;
-            view_projection_descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            view_projection_descriptorWrite.descriptorCount = 1;
-            view_projection_descriptorWrite.pBufferInfo = &view_projection_bufferInfo;
-
+            // eye location and lights
             offset += getAlignSize(sizeof(ViewProjectrion));
+            updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size()) + 1], uniformBuffers, offset, sizeof(FragmentUniform));
+            updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size()) + 1],
+                descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1)], 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                &bufferInfos[i * (2 + scene->meshes.size()) + 1], nullptr);
 
-            VkDescriptorBufferInfo& fragment_bufferInfo = bufferInfos[i * (2 + scene->meshes.size()) + 1];
-            fragment_bufferInfo = {};
-            fragment_bufferInfo.buffer = uniformBuffers;
-            fragment_bufferInfo.offset = offset;
-            fragment_bufferInfo.range = sizeof(FragmentUniform);
+            // textures
+            for (int j = 0; j < scene->textures.size(); j++) {
+                updateImageInfo(imageInfos[i * MAX_FRAMES_IN_FLIGHT + j], textureImageView[j], textureSampler);
+                updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size()) + 2 + j],
+                    descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1) + 1 + j], 0,
+                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, nullptr, &imageInfos[i * MAX_FRAMES_IN_FLIGHT + j]);
+            }
 
-            VkWriteDescriptorSet& fragment_descriptorWrite = descriptorWrites[i * (4 + scene->meshes.size()) + 1];
-            fragment_descriptorWrite = {};
-            fragment_descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            fragment_descriptorWrite.dstSet = descriptorSets[i * (scene->meshes.size() + 3)];
-            fragment_descriptorWrite.dstBinding = 1;
-            fragment_descriptorWrite.dstArrayElement = 0;
-            fragment_descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            fragment_descriptorWrite.descriptorCount = 1;
-            fragment_descriptorWrite.pBufferInfo = &fragment_bufferInfo;
-
+            // meshes
             offset += getAlignSize(sizeof(FragmentUniform));
-            
-            VkDescriptorImageInfo& imageInfo_1 = imageInfos[i * MAX_FRAMES_IN_FLIGHT];
-            imageInfo_1 = {};
-            imageInfo_1.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo_1.imageView = textureImageView[0];
-            imageInfo_1.sampler = textureSampler;
-
-            VkDescriptorImageInfo& imageInfo_2 = imageInfos[i * MAX_FRAMES_IN_FLIGHT + 1];
-            imageInfo_2 = {};
-            imageInfo_2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo_2.imageView = textureImageView[1];
-            imageInfo_2.sampler = textureSampler;
-
-            VkWriteDescriptorSet& texture_1_descriptorWrite = descriptorWrites[i * (4 + scene->meshes.size()) + 2];
-            texture_1_descriptorWrite = {};
-            texture_1_descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            texture_1_descriptorWrite.dstSet = descriptorSets[i * (scene->meshes.size() + 3) + 1];
-            texture_1_descriptorWrite.dstBinding = 0;
-            texture_1_descriptorWrite.dstArrayElement = 0;
-            texture_1_descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            texture_1_descriptorWrite.descriptorCount = 1;
-            texture_1_descriptorWrite.pImageInfo = &imageInfo_1;
-
-            VkWriteDescriptorSet& texture_2_descriptorWrite = descriptorWrites[i * (4 + scene->meshes.size()) + 3];
-            texture_2_descriptorWrite = {};
-            texture_2_descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            texture_2_descriptorWrite.dstSet = descriptorSets[i * (scene->meshes.size() + 3) + 2];
-            texture_2_descriptorWrite.dstBinding = 0;
-            texture_2_descriptorWrite.dstArrayElement = 0;
-            texture_2_descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            texture_2_descriptorWrite.descriptorCount = 1;
-            texture_2_descriptorWrite.pImageInfo = &imageInfo_2;
-
             for (int j = 0; j < scene->meshes.size(); j++) {
-
-                VkDescriptorBufferInfo& model_bufferInfo = bufferInfos[i * (2 + scene->meshes.size()) + 2 + j];
-                model_bufferInfo = {};
-                model_bufferInfo.buffer = uniformBuffers;
-                model_bufferInfo.offset = offset;
-                model_bufferInfo.range = sizeof(glm::mat4);
-
-                VkWriteDescriptorSet& model_descriptorWrite = descriptorWrites[i * (4 + scene->meshes.size()) + 4 + j];
-                model_descriptorWrite = {};
-                model_descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                model_descriptorWrite.dstSet = descriptorSets[i * (scene->meshes.size() + 3) + 3 + j];
-                model_descriptorWrite.dstBinding = 0;
-                model_descriptorWrite.dstArrayElement = 0;
-                model_descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                model_descriptorWrite.descriptorCount = 1;
-                model_descriptorWrite.pBufferInfo = &model_bufferInfo;
-
+                updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size()) + 2 + j], uniformBuffers, offset, sizeof(glm::mat4));
+                updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size()) + 2 + scene->textures.size() + j],
+                    descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1) + scene->textures.size() + 1 + j], 0,
+                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &bufferInfos[i * (2 + scene->meshes.size()) + 2 + j], nullptr);
                 offset += getAlignSize(sizeof(glm::mat4));
             }
         }
+
+        // use the descriptorWrites to update descriptorSets
         vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+
+    void updateBufferInfo(VkDescriptorBufferInfo& bufferInfo, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size) {
+        /*
+        update a VkDescriptorBufferInfo
+        */
+
+        bufferInfo = {};
+        bufferInfo.buffer = buffer;
+        bufferInfo.offset = offset;
+        bufferInfo.range = size;
+    }
+
+    void updateImageInfo(VkDescriptorImageInfo& imageInfo, VkImageView imageView, VkSampler sampler) {
+        /*
+        update a VkDescriptorImageInfo
+        */
+
+        imageInfo = {};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = imageView;
+        imageInfo.sampler = sampler;
+    }
+
+    void updateDescriptorWrite(VkWriteDescriptorSet& descriptorWrite, VkDescriptorSet set, uint32_t binding,
+        VkDescriptorType type, VkDescriptorBufferInfo* bufferInfo, VkDescriptorImageInfo* imageInfo) {
+        /*
+        update a VkWriteDescriptorSet
+        */
+
+        descriptorWrite = {};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = set;
+        descriptorWrite.dstBinding = binding;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = type;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = bufferInfo;
+        descriptorWrite.pImageInfo = imageInfo;
     }
 
     VkCommandBuffer beginSingleTimeCommands() {
