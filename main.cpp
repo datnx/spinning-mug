@@ -222,6 +222,11 @@ private:
     }
 
     void loadScene() {
+
+        // test loading San Miguel
+        Scene* scene_test = new Scene();
+        load_meshes_and_textures(scene_test->meshes, scene_test->textures, "3d_models/San_Miguel/san-miguel-low-poly.obj");
+
         scene = new Scene();
         load_meshes(scene->meshes, "3d_models/colorStart.fbx");
         scene->lights = light();
