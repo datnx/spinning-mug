@@ -74,7 +74,7 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 			for (int j = 0; j < mesh->mNumVertices; j++) {
 				aiVector3D position = mesh->mVertices[j];
 				aiVector3D normal = mesh->mNormals[j];
-				aiVector3D uv = mesh->mTextureCoords[0][j];
+				aiVector3D uv = mesh->mTextureCoords[0][j]; // TODO: deal with multiple texture coordinates if applicable
 				loaded_mesh.vertices.emplace_back(*reinterpret_cast<glm::vec3*>(&position), *reinterpret_cast<glm::vec3*>(&normal), white, *reinterpret_cast<glm::vec2*>(&uv));
 			}
 
