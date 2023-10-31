@@ -43,7 +43,10 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 	// set the vertex color to white for now
 	glm::vec4 white = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	// loop
+	// use a hash map to check for loaded texture
+	std::unordered_map<std::string, int> texture_index;
+
+	// loop through all the meshes
 	while (!nodes_stack.empty()) {
 
 		// current node
@@ -60,13 +63,27 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 			
 			// mesh node
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			
+
+			// TODO: handle meshes without diffuse color texture
+			// check if this mesh has a texture
+			aiString texture_path;
+			scene->mMaterials[mesh->mMaterialIndex]->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), texture_path);
+			if (texture_path.length > 0) {
+				if (texture_index.find(texture_path.C_Str()) == texture_index.end()) {
+					texture_index[texture_path.C_Str()] = textures.size();
+					textures.emplace_back(texture_path.C_Str());
+				}
+			} else {
+				continue;
+			}
+
 			// instantiate a Mesh
 			Mesh loaded_mesh = Mesh();
 			loaded_mesh.index_offset = i_offset;
 			loaded_mesh.vertex_offset = v_offset;
 			loaded_mesh.vertices.reserve(mesh->mNumVertices);
 			loaded_mesh.indices.reserve(mesh->mNumFaces * 3);
+			loaded_mesh.texture_index = texture_index[texture_path.C_Str()];
 			i_offset += mesh->mNumFaces * 3;
 			v_offset += mesh->mNumVertices;
 
