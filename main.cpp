@@ -427,19 +427,21 @@ private:
             memoryAllocator->findMemoryType(typeFilter, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT), textureImageMemory);
 
         // bind the VkImage to the memory and copy data from the staging buffer to the VkImage
-        VkDeviceSize memOffset = 0;
+        VkDeviceSize imageOffset = 0;
+        VkDeviceSize bufferOffset = 0;
         for (int i = 0; i < scene->textures.size(); i++) {
             
             // bind the VkImage
-            vkBindImageMemory(device, textureImage[i], textureImageMemory, memOffset);
+            vkBindImageMemory(device, textureImage[i], textureImageMemory, imageOffset);
 
             // copy data
             transitionImageLayout(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            copyBufferToImage(stagingBuffer, memOffset, textureImage[i], static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]));
+            copyBufferToImage(stagingBuffer, bufferOffset, textureImage[i], static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]));
             transitionImageLayout(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
             // update the offset
-            memOffset += memRequirements[i].size;
+            imageOffset += memRequirements[i].size;
+            bufferOffset += imageSize[i];
         }
 
         // free the staging buffer
