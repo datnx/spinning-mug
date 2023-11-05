@@ -223,23 +223,11 @@ private:
 
     void loadScene() {
 
-        // test loading San Miguel
-        Scene* scene_test = new Scene();
-        load_meshes_and_textures(scene_test->meshes, scene_test->textures, "3d_models/San_Miguel/san-miguel-low-poly.obj");
-
         scene = new Scene();
-        load_meshes(scene->meshes, "3d_models/colorStart.fbx");
+        load_meshes_and_textures(scene->meshes, scene->textures, "3d_models/San_Miguel/san-miguel-low-poly.obj");
         scene->lights = light();
         scene->lights.load_file("config/directional_lights.txt");
         fubo.lights = scene->lights;
-
-        // temporarily set the texture index and create the textures
-        for (int i = 0; i < scene->meshes.size(); i++) {
-            if (scene->meshes[i].material_name == "Texture_1") scene->meshes[i].texture_index = 0;
-            if (scene->meshes[i].material_name == "Texture_2") scene->meshes[i].texture_index = 1;
-        }
-        scene->textures.emplace_back("textures/Javorcsik_David_GameArtExam_Vendor_Tex.png");
-        scene->textures.emplace_back("textures/Javorcsik_David_GameArtExam_Environment_Te.png");
 
         // create VkImage and VkImageView for textures
         createTextureImages();
