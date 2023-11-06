@@ -112,10 +112,6 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 				transform.a3, transform.b3, transform.c3, transform.d3,
 				transform.a4, transform.b4, transform.c4, transform.d4
 			);
-
-			// material name and debug, will be removed in the future
-			loaded_mesh.material_name = scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str();
-			loaded_mesh.debug = node->mName.C_Str();
 			
 			// done reading this mesh
 			meshes.push_back(loaded_mesh);

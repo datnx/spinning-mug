@@ -10,8 +10,6 @@ public:
 	std::vector<Vertex> vertices;
 	std::vector<uint16_t> indices;
 	glm::mat4 init_transform;
-	std::string material_name;
-	std::string debug;
 	int index_offset;
 	int vertex_offset;
 	int texture_index;
