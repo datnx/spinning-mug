@@ -45,9 +45,6 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 	int i_offset = 0;
 	int v_offset = 0;
 
-	// set the vertex color to white for now
-	glm::vec4 white = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-
 	// use a hash map to check for loaded texture
 	std::unordered_map<std::string, int> texture_index;
 
@@ -98,7 +95,7 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 				aiVector3D position = mesh->mVertices[j];
 				aiVector3D normal = mesh->mNormals[j];
 				aiVector3D uv = mesh->mTextureCoords[0][j]; // TODO: deal with multiple texture coordinates if applicable
-				loaded_mesh.vertices.emplace_back(*reinterpret_cast<glm::vec3*>(&position), *reinterpret_cast<glm::vec3*>(&normal), white, *reinterpret_cast<glm::vec2*>(&uv));
+				loaded_mesh.vertices.emplace_back(*reinterpret_cast<glm::vec3*>(&position), *reinterpret_cast<glm::vec3*>(&normal), *reinterpret_cast<glm::vec2*>(&uv));
 			}
 
 			// read indices
