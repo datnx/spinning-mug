@@ -4,6 +4,7 @@
 
 #include "vertex.h"
 #include "light.h"
+#include "camera.h"
 
 class Mesh {
 public:
@@ -25,6 +26,7 @@ public:
 	std::vector<Mesh> meshes;
 	std::vector<Texture> textures;
 	light lights;
+	Camera camera;
 	
 	// Get the total number of vertices in the scene
 	int get_num_vertices();
