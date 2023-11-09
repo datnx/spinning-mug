@@ -1393,7 +1393,7 @@ private:
         size_t model_size = getAlignSize(sizeof(glm::mat4));
         size_t uniform_size = view_projection_size + fragment_size + model_size * scene->meshes.size();
         
-        glm::mat4 scale_matrix = scale(glm::mat4(1.0f), 0.0015f, 0.0015f, 0.0015f);
+        glm::mat4 scale_matrix = scale(glm::mat4(1.0f), 1.0f, 1.0f, 1.0f);
 
         for (int i = 0; i < scene->meshes.size(); i++) {
             glm::mat4 model_matrix = rotate(scale_matrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
