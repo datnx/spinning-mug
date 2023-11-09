@@ -1392,11 +1392,6 @@ private:
         size_t fragment_size = getAlignSize(sizeof(FragmentUniform));
         size_t model_size = getAlignSize(sizeof(glm::mat4));
         size_t uniform_size = view_projection_size + fragment_size + model_size * scene->meshes.size();
-
-        static auto startTime = std::chrono::high_resolution_clock::now();
-
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
         
         glm::mat4 scale_matrix = scale(glm::mat4(1.0f), 0.0015f, 0.0015f, 0.0015f);
 
@@ -1406,14 +1401,12 @@ private:
             memcpy(p + currentFrame * uniform_size + view_projection_size + fragment_size + i * model_size, &model_matrix, sizeof(glm::mat4));
         }
         
-
-        glm::mat4 eye_transform = rotate(glm::mat4(1.0f), time * glm::radians(15.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        //glm::mat4 eye_transform = glm::mat4(1.0f);
-        fubo.eye = mul(eye_transform, eye_init);
+        fubo.eye = scene->camera.cameraPos;
         memcpy(p + currentFrame * uniform_size + view_projection_size, &fubo, sizeof(FragmentUniform));
         
         ViewProjectrion view_proj_matrix;
-        view_proj_matrix.view = lookAt(fubo.eye, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        view_proj_matrix.view = lookAt(scene->camera.cameraPos,
+            scene->camera.cameraPos + scene->camera.cameraFront, scene->camera.cameraUp);
         view_proj_matrix.proj = perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
         view_proj_matrix.proj[1][1] *= -1;
 
