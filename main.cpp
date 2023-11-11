@@ -188,6 +188,17 @@ private:
         // Esc to exit the program
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
+
+        // awsd to move around
+        const float cameraSpeed = 0.05f;
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            scene->camera.cameraPos += cameraSpeed * scene->camera.cameraFront;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            scene->camera.cameraPos -= cameraSpeed * scene->camera.cameraFront;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            scene->camera.cameraPos -= normalize(cross(scene->camera.cameraFront, scene->camera.cameraUp)) * cameraSpeed;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            scene->camera.cameraPos += normalize(cross(scene->camera.cameraFront, scene->camera.cameraUp)) * cameraSpeed;
     }
 
     void initWindow() {
