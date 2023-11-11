@@ -180,6 +180,12 @@ private:
 
     bool framebufferResized = false;
 
+    void processInput(GLFWwindow* window)
+    {
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            glfwSetWindowShouldClose(window, true);
+    }
+
     void initWindow() {
         glfwInit();
 
@@ -240,6 +246,8 @@ private:
 
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
+            processInput(window);
+
             glfwPollEvents();
             drawFrame();
         }
