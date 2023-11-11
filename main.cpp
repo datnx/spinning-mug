@@ -180,8 +180,12 @@ private:
 
     bool framebufferResized = false;
 
-    void processInput(GLFWwindow* window)
-    {
+    void processInput(GLFWwindow* window) {
+        /*
+        check for keyboard inputs and act acordingly
+        */
+
+        // Esc to exit the program
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
     }
@@ -246,6 +250,8 @@ private:
 
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
+            
+            // process keyboard input
             processInput(window);
 
             glfwPollEvents();
