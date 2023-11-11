@@ -1021,7 +1021,7 @@ private:
         // for each frame
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             
-            // this set is for view matrix, projection matrix
+            // this set is for view matrix, projection matrix, eye location, and lights
             layouts.push_back(descriptorSetLayout_0);
 
             // these sets are for textures
