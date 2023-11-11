@@ -1074,10 +1074,10 @@ private:
 
             // textures
             for (int j = 0; j < scene->textures.size(); j++) {
-                updateImageInfo(imageInfos[i * MAX_FRAMES_IN_FLIGHT + j], textureImageView[j], textureSampler);
+                updateImageInfo(imageInfos[i * scene->textures.size() + j], textureImageView[j], textureSampler);
                 updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size()) + 2 + j],
                     descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1) + 1 + j], 0,
-                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, nullptr, &imageInfos[i * MAX_FRAMES_IN_FLIGHT + j]);
+                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, nullptr, &imageInfos[i * scene->textures.size() + j]);
             }
 
             // meshes
