@@ -180,8 +180,6 @@ private:
 
     bool framebufferResized = false;
 
-    glm::vec3 eye_init = glm::vec3(2.0f, 2.0f, 0.5f);
-
     void initWindow() {
         glfwInit();
 
