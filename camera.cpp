@@ -28,6 +28,25 @@ Camera::Camera() {
 	firstMouse = true;
 }
 
+void Camera::awsd_movement(GLFWwindow* window) {
+	/*
+	using awsd to move around
+	*/
+
+	float currentFrame = glfwGetTime();
+	float deltaTime = currentFrame - last_frame;
+	last_frame = currentFrame;
+	float cameraSpeed = 2.5f * deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		cameraPos += cameraSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		cameraPos -= cameraSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		cameraPos -= normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		cameraPos += normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+}
+
 void Camera::mouse_callback(double xpos, double ypos) {
 	/*
 	this is called each frame to process mouse movements

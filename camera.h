@@ -30,4 +30,6 @@ struct Camera {
 
 	// mouse callback
 	void mouse_callback(double xpos, double ypos);
+
+	void awsd_movement(GLFWwindow* window);
 };

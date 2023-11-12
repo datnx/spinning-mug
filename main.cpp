@@ -188,18 +188,7 @@ private:
             glfwSetWindowShouldClose(window, true);
 
         // awsd to move around
-        float currentFrame = glfwGetTime();
-        float deltaTime = currentFrame - scene->camera.last_frame;
-        scene->camera.last_frame = currentFrame;
-        float cameraSpeed = 2.5f * deltaTime;
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            scene->camera.cameraPos += cameraSpeed * scene->camera.cameraFront;
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            scene->camera.cameraPos -= cameraSpeed * scene->camera.cameraFront;
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            scene->camera.cameraPos -= normalize(cross(scene->camera.cameraFront, scene->camera.cameraUp)) * cameraSpeed;
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            scene->camera.cameraPos += normalize(cross(scene->camera.cameraFront, scene->camera.cameraUp)) * cameraSpeed;
+        scene->camera.awsd_movement(window);
     }
 
     void initWindow() {
