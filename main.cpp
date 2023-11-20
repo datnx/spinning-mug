@@ -151,7 +151,6 @@ private:
 
     uint64_t min_uboOffset;
 
-    light all_lights;
     FragmentUniform fubo;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
