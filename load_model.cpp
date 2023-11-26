@@ -66,6 +66,16 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 			// mesh node
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 
+			// only render mesh with "material_39"
+			if (scene->mMaterials[mesh->mMaterialIndex]->GetName() == aiString("material_39")) {
+
+			} else continue;
+
+			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+			aiString normal_map_path;
+			material->Get(AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0), normal_map_path);
+			std::cout << normal_map_path.C_Str() << std::endl;
+
 			// TODO: handle meshes without diffuse color texture
 			// check if this mesh has a texture
 			aiString texture_path;
