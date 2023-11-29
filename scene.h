@@ -24,6 +24,7 @@ public:
 	int index_offset;
 	int vertex_offset;
 	int texture_index;
+	int normal_map_index;
 };
 
 struct Texture {
