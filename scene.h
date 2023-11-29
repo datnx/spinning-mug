@@ -16,6 +16,16 @@ public:
 	int texture_index;
 };
 
+class MeshWithNormalMap {
+public:
+	std::vector<VertexWithTangent> vertices;
+	std::vector<uint16_t> indices;
+	glm::mat4 init_transform;
+	int index_offset;
+	int vertex_offset;
+	int texture_index;
+};
+
 struct Texture {
 	std::string file_path;
 	Texture(std::string path);
