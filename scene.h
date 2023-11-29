@@ -50,6 +50,7 @@ struct FragmentUniform {
 class Scene {
 public:
 	std::vector<Mesh> meshes;
+	std::vector<MeshWithNormalMap> meshes_with_normal_map;
 	std::vector<Texture> textures;
 	std::vector<std::string> debug_node_names;
 	int debug_index;
