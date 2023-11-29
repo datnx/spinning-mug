@@ -35,6 +35,7 @@ struct Texture {
 class Scene {
 public:
 	std::vector<Mesh> meshes;
+	std::vector<MeshWithNormalMap> meshes_with_normal_map;
 	std::vector<Texture> textures;
 	light lights;
 	Camera camera;
