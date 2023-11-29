@@ -1,3 +1,5 @@
+#include <stb_image.h>
+
 #include <fstream>
 #include <unordered_map>
 #include <assimp/Importer.hpp>
@@ -71,10 +73,23 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 
 			} else continue;
 
+			// check to see if this mesh has a normal map
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-			aiString normal_map_path;
-			material->Get(AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0), normal_map_path);
-			std::cout << normal_map_path.C_Str() << std::endl;
+			int num_height_texture = material->GetTextureCount(aiTextureType_HEIGHT);
+			if (num_height_texture == 1) {
+				aiString normal_map_path;
+				material->Get(AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0), normal_map_path);
+				if (texture_index.find(normal_map_path.C_Str()) == texture_index.end()) {
+					// check to see if this texture has 3 color channels
+					int x, y, n, ok;
+					std::filesystem::path correct_normal_map_path = std::filesystem::path(folder_path).append(normal_map_path.C_Str());
+					ok = stbi_info(correct_normal_map_path.string().c_str(), &x, &y, &n);
+					if (ok == 1 && n == 3) {
+						texture_index[normal_map_path.C_Str()] = textures.size();
+						textures.emplace_back(correct_normal_map_path.string());
+					}
+				}
+			}
 
 			// TODO: handle meshes without diffuse color texture
 			// check if this mesh has a texture
