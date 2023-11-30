@@ -6,9 +6,12 @@
 #include "light.h"
 #include "camera.h"
 
-class Mesh {
+class MeshBase {
+	/*
+	The base mesh class. Every mesh have indices, an initial transformation,
+	an index offset, a vertex offset, a diffuse texture index
+	*/
 public:
-	std::vector<Vertex> vertices;
 	std::vector<uint16_t> indices;
 	glm::mat4 init_transform;
 	int index_offset;
@@ -16,14 +19,14 @@ public:
 	int texture_index;
 };
 
-class MeshWithNormalMap {
+class Mesh : public MeshBase {
+public:
+	std::vector<Vertex> vertices;
+};
+
+class MeshWithNormalMap : public MeshBase {
 public:
 	std::vector<VertexWithTangent> vertices;
-	std::vector<uint16_t> indices;
-	glm::mat4 init_transform;
-	int index_offset;
-	int vertex_offset;
-	int texture_index;
 	int normal_map_index;
 };
 
