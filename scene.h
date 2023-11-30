@@ -9,9 +9,12 @@
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-class Mesh {
+class MeshBase {
+	/*
+	The base mesh class. Every mesh have indices, an initial transformation,
+	an index offset, a vertex offset, a diffuse texture index
+	*/
 public:
-	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 	glm::mat4 init_transform;
 	int index_offset;
@@ -20,16 +23,15 @@ public:
 	std::string debug_node_name;
 };
 
-class MeshWithNormalMap {
+class Mesh : public MeshBase {
+public:
+	std::vector<Vertex> vertices;
+};
+
+class MeshWithNormalMap : public MeshBase {
 public:
 	std::vector<VertexWithTangent> vertices;
-	std::vector<uint32_t> indices;
-	glm::mat4 init_transform;
-	int index_offset;
-	int vertex_offset;
-	int texture_index;
 	int normal_map_index;
-	std::string debug_node_name;
 };
 
 struct Texture {
