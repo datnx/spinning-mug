@@ -17,17 +17,23 @@ public:
 	int index_offset;
 	int vertex_offset;
 	int texture_index;
+	MeshBase(int num_indices, glm::mat4 i_transform,
+		int i_offset, int v_offset, int tex_ind);
 };
 
 class Mesh : public MeshBase {
 public:
 	std::vector<Vertex> vertices;
+	Mesh(int num_vertices, int num_indices, glm::mat4 i_transform,
+		int i_offset, int v_offset, int tex_ind);
 };
 
 class MeshWithNormalMap : public MeshBase {
 public:
 	std::vector<VertexWithTangent> vertices;
 	int normal_map_index;
+	MeshWithNormalMap(int num_vertices, int num_indices, glm::mat4 i_transform,
+		int i_offset, int v_offset, int tex_ind, int nor_map_ind);
 };
 
 struct Texture {
