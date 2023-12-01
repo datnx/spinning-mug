@@ -243,7 +243,8 @@ private:
     void loadScene() {
 
         scene = new Scene();
-        load_meshes_and_textures(scene->meshes, scene->textures, "3d_models/San_Miguel/san-miguel-low-poly.obj");
+        load_meshes_and_textures(scene->meshes, scene->meshes_with_normal_map,
+            scene->textures, "3d_models/San_Miguel/san-miguel-low-poly.obj");
         scene->lights = light();
         scene->lights.load_file("config/directional_lights.txt");
         fubo.lights = scene->lights;
