@@ -153,7 +153,9 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes,
 				}
 
 				// calculate tangent vectors
+				loaded_mesh.calculate_tangent_vectors();
 
+				// done reading this mesh
 				meshes_with_normal_map.push_back(loaded_mesh);
 
 			} else {
