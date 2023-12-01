@@ -11,6 +11,7 @@ struct VertexBase {
     glm::vec3 pos;
     glm::vec3 normal;
     glm::vec2 texCoord;
+    VertexBase(glm::vec3 p, glm::vec3 n, glm::vec2 uv);
 };
 
 struct Vertex : public VertexBase {
@@ -30,7 +31,7 @@ struct VertexWithTangent : public VertexBase {
     */
     glm::vec3 tangent;
 
-    VertexWithTangent(glm::vec3 p, glm::vec3 n, glm::vec3 t, glm::vec2 uv);
+    VertexWithTangent(glm::vec3 p, glm::vec3 n, glm::vec2 uv);
 
     static VkVertexInputBindingDescription getBindingDescription();
 

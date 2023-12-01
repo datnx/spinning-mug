@@ -1,10 +1,12 @@
 #include "vertex.h"
 
-Vertex::Vertex(glm::vec3 p, glm::vec3 n, glm::vec2 uv) {
+VertexBase::VertexBase(glm::vec3 p, glm::vec3 n, glm::vec2 uv) {
     pos = p;
     normal = n;
     texCoord = uv;
 }
+
+Vertex::Vertex(glm::vec3 p, glm::vec3 n, glm::vec2 uv) : VertexBase(p, n, uv) {}
 
 VkVertexInputBindingDescription Vertex::getBindingDescription() {
     VkVertexInputBindingDescription bindingDescription{};
@@ -36,11 +38,8 @@ std::array<VkVertexInputAttributeDescription, 3> Vertex::getAttributeDescription
     return attributeDescriptions;
 }
 
-VertexWithTangent::VertexWithTangent(glm::vec3 p, glm::vec3 n, glm::vec3 t, glm::vec2 uv) {
-    pos = p;
-    normal = n;
-    tangent = t;
-    texCoord = uv;
+VertexWithTangent::VertexWithTangent(glm::vec3 p, glm::vec3 n, glm::vec2 uv) : VertexBase(p, n, uv) {
+    tangent = glm::vec3(0.0f, 0.0f, 1.0f);
 }
 
 VkVertexInputBindingDescription VertexWithTangent::getBindingDescription() {
