@@ -8,7 +8,7 @@ class Buffer {
 public:
 	
 	// the GPU that store the buffer
-	GPU gpu;
+	GPU* gpu;
 
 	// the buffer handle
 	VkBuffer buffer;

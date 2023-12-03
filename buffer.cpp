@@ -4,6 +4,6 @@ Buffer::~Buffer() {
 	/*
 	Destroy the buffer and free the memory
 	*/
-	vkDestroyBuffer(device, buffer, nullptr);
-	vkFreeMemory(device, memory, nullptr);
+	vkDestroyBuffer(gpu->logical_gpu, buffer, nullptr);
+	vkFreeMemory(gpu->logical_gpu, memory, nullptr);
 }
