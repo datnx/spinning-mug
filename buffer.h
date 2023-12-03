@@ -16,6 +16,10 @@ public:
 	// the memory that this buffer is at
 	VkDeviceMemory memory;
 
+	// constructor
+	Buffer(GPU* gpu_, VkDeviceSize size, VkBufferUsageFlags usage,
+		VkMemoryPropertyFlags properties);
+
 	// destructor
 	~Buffer();
 };
