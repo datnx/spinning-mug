@@ -10,4 +10,6 @@ public:
 	GPU(VkPhysicalDevice physical, VkDevice logical);
 
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+	void allocateMemory(VkDeviceSize size, uint32_t mem_type_index, VkDeviceMemory& memory);
 };

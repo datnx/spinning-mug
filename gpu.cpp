@@ -19,3 +19,15 @@ uint32_t GPU::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properti
 
     throw std::runtime_error("failed to find suitable memory type!");
 }
+
+void GPU::allocateMemory(VkDeviceSize size, uint32_t mem_type_index, VkDeviceMemory& memory) {
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = size;
+    allocInfo.memoryTypeIndex = mem_type_index;
+
+    if (vkAllocateMemory(logical_gpu, &allocInfo, nullptr, &memory) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate memory!");
+    }
+}
