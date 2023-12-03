@@ -2,11 +2,13 @@
 
 #include <vulkan/vulkan.h>
 
+#include "gpu.h"
+
 class Buffer {
 public:
 	
-	// the device that store the buffer
-	VkDevice device;
+	// the GPU that store the buffer
+	GPU gpu;
 
 	// the buffer handle
 	VkBuffer buffer;
