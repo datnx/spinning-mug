@@ -64,6 +64,7 @@ SwapChainSupportDetails::SwapChainSupportDetails(VkPhysicalDevice device, VkSurf
 GPU::GPU() {
     physical_gpu = VK_NULL_HANDLE;
     logical_gpu = VK_NULL_HANDLE;
+    min_uboOffset = 0;
 }
 
 GPU::GPU(VkPhysicalDevice physical, VkDevice logical) {
