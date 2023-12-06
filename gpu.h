@@ -12,6 +12,12 @@ struct QueueFamilyIndices {
 	bool isComplete();
 };
 
+struct SwapChainSupportDetails {
+	VkSurfaceCapabilitiesKHR capabilities;
+	std::vector<VkSurfaceFormatKHR> formats;
+	std::vector<VkPresentModeKHR> presentModes;
+};
+
 class GPU {
 public:
 	VkPhysicalDevice physical_gpu;
