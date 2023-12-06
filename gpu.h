@@ -32,6 +32,8 @@ public:
 	void allocateMemory(VkDeviceSize size, uint32_t mem_type_index, VkDeviceMemory& memory);
 
 private:
+	void pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface);
+
 	bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
 
 	bool checkDeviceExtensionSupport();

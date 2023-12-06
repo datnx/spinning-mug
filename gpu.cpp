@@ -65,6 +65,35 @@ GPU::GPU(VkPhysicalDevice physical, VkDevice logical) {
 	logical_gpu = logical;
 }
 
+void GPU::pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface) {
+    /*
+    Select the physical GPU
+    */
+    
+    // count all the GPU that supports Vulkan in this machine
+    uint32_t deviceCount = 0;
+    vkEnumeratePhysicalDevices(vulkan_instance, &deviceCount, nullptr);
+    if (deviceCount == 0) {
+        throw std::runtime_error("failed to find GPUs with Vulkan support!");
+    }
+
+    // query all GPUs
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    vkEnumeratePhysicalDevices(vulkan_instance, &deviceCount, devices.data());
+
+    // select the first suitable GPU on the list
+    for (const auto& device : devices) {
+        if (isDeviceSuitable(device, surface)) {
+            physical_gpu = device;
+            break;
+        }
+    }
+
+    if (physical_gpu == VK_NULL_HANDLE) {
+        throw std::runtime_error("failed to find a suitable GPU!");
+    }
+}
+
 bool GPU::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
     QueueFamilyIndices indices(device, surface);
 
