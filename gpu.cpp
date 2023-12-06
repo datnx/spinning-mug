@@ -80,11 +80,6 @@ GPU::GPU(VkInstance vulkan_instance, VkSurfaceKHR surface) {
     createLogicalDevice(surface);
 }
 
-GPU::GPU(VkPhysicalDevice physical, VkDevice logical) {
-	physical_gpu = physical;
-	logical_gpu = logical;
-}
-
 void GPU::pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface) {
     /*
     Select the physical GPU
