@@ -25,6 +25,8 @@ public:
 	VkPhysicalDevice physical_gpu;
 	VkDevice logical_gpu;
 	uint64_t min_uboOffset;
+	VkQueue graphicsQueue;
+	VkQueue presentQueue;
 
 
 	GPU(VkPhysicalDevice physical, VkDevice logical);
