@@ -24,6 +24,7 @@ class GPU {
 public:
 	VkPhysicalDevice physical_gpu;
 	VkDevice logical_gpu;
+	uint64_t min_uboOffset;
 
 	GPU();
 
