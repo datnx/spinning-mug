@@ -20,6 +20,7 @@
 #include <optional>
 #include <set>
 
+#include "gpu.h"
 #include "transform.h"
 #include "vertex.h"
 #include "load_model.h"
@@ -115,6 +116,8 @@ private:
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
     VkSurfaceKHR surface;
+
+    GPU gpu;
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
