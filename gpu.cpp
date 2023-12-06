@@ -60,6 +60,12 @@ SwapChainSupportDetails::SwapChainSupportDetails(VkPhysicalDevice device, VkSurf
         vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, presentModes.data());
     }
 }
+
+GPU::GPU() {
+    physical_gpu = VK_NULL_HANDLE;
+    logical_gpu = VK_NULL_HANDLE;
+}
+
 GPU::GPU(VkPhysicalDevice physical, VkDevice logical) {
 	physical_gpu = physical;
 	logical_gpu = logical;
