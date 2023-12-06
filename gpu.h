@@ -38,6 +38,8 @@ public:
 private:
 	void pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface);
 
+	void createLogicalDevice(VkSurfaceKHR surface);
+
 	bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
 
 	bool checkDeviceExtensionSupport();
