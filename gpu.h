@@ -26,7 +26,6 @@ public:
 	VkDevice logical_gpu;
 	uint64_t min_uboOffset;
 
-	GPU();
 
 	GPU(VkPhysicalDevice physical, VkDevice logical);
 
