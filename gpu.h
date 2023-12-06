@@ -28,6 +28,7 @@ public:
 	VkQueue graphicsQueue;
 	VkQueue presentQueue;
 
+	GPU(VkInstance vulkan_instance, VkSurfaceKHR surface);
 
 	GPU(VkPhysicalDevice physical, VkDevice logical);
 

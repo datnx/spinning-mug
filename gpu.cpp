@@ -70,6 +70,14 @@ SwapChainSupportDetails::SwapChainSupportDetails(VkPhysicalDevice device, VkSurf
     }
 }
 
+GPU::GPU(VkInstance vulkan_instance, VkSurfaceKHR surface) {
+    pickPhysicalDevice(vulkan_instance, surface);
+
+    VkPhysicalDeviceProperties device_properties;
+    vkGetPhysicalDeviceProperties(physical_gpu, &device_properties);
+    min_uboOffset = device_properties.limits.minUniformBufferOffsetAlignment;
+
+    createLogicalDevice(surface);
 }
 
 GPU::GPU(VkPhysicalDevice physical, VkDevice logical) {
@@ -147,6 +155,9 @@ void GPU::createLogicalDevice(VkSurfaceKHR surface) {
     if (vkCreateDevice(physical_gpu, &createInfo, nullptr, &logical_gpu) != VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
+
+    vkGetDeviceQueue(logical_gpu, indices.graphicsFamily.value(), 0, &graphicsQueue);
+    vkGetDeviceQueue(logical_gpu, indices.presentFamily.value(), 0, &presentQueue);
 }
 
 bool GPU::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
