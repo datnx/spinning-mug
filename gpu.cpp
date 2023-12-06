@@ -1,7 +1,12 @@
 #include <stdexcept>
 #include <vector>
+#include <set>
 
 #include "gpu.h"
+
+const std::vector<const char*> deviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
 
 QueueFamilyIndices::QueueFamilyIndices(VkPhysicalDevice device, VkSurfaceKHR surface) {
     
@@ -39,6 +44,22 @@ bool QueueFamilyIndices::isComplete() {
 GPU::GPU(VkPhysicalDevice physical, VkDevice logical) {
 	physical_gpu = physical;
 	logical_gpu = logical;
+}
+
+bool GPU::checkDeviceExtensionSupport() {
+    uint32_t extensionCount;
+    vkEnumerateDeviceExtensionProperties(physical_gpu, nullptr, &extensionCount, nullptr);
+
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(physical_gpu, nullptr, &extensionCount, availableExtensions.data());
+
+    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+
+    for (const auto& extension : availableExtensions) {
+        requiredExtensions.erase(extension.extensionName);
+    }
+
+    return requiredExtensions.empty();
 }
 
 uint32_t GPU::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
