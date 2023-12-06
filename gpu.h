@@ -32,6 +32,7 @@ public:
 	void allocateMemory(VkDeviceSize size, uint32_t mem_type_index, VkDeviceMemory& memory);
 
 private:
+	bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
 
 	bool checkDeviceExtensionSupport();
 };

@@ -65,6 +65,23 @@ GPU::GPU(VkPhysicalDevice physical, VkDevice logical) {
 	logical_gpu = logical;
 }
 
+bool GPU::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
+    QueueFamilyIndices indices(device, surface);
+
+    bool extensionsSupported = checkDeviceExtensionSupport();
+
+    bool swapChainAdequate = false;
+    if (extensionsSupported) {
+        SwapChainSupportDetails swapChainSupport(device, surface);
+        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+    }
+
+    VkPhysicalDeviceFeatures supportedFeatures;
+    vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
+    return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
+}
+
 bool GPU::checkDeviceExtensionSupport() {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(physical_gpu, nullptr, &extensionCount, nullptr);
