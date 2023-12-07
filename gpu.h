@@ -27,6 +27,7 @@ public:
 	uint64_t min_uboOffset;
 	VkQueue graphicsQueue;
 	VkQueue presentQueue;
+	VkCommandPool commandPool;
 
 	GPU(VkInstance vulkan_instance, VkSurfaceKHR surface);
 
@@ -37,9 +38,11 @@ public:
 private:
 	void pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface);
 
-	void createLogicalDevice(VkSurfaceKHR surface);
+	void createLogicalDevice(VkSurfaceKHR surface, QueueFamilyIndices& indices);
 
 	bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
 
 	bool checkDeviceExtensionSupport();
+
+	void createCommandPool(QueueFamilyIndices& indices);
 };

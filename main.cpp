@@ -131,8 +131,6 @@ private:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 
-    VkCommandPool commandPool;
-
     Scene* scene;
 
     std::vector<VkImage> textureImage;
@@ -226,7 +224,6 @@ private:
         msaa->createColorResources(swapChainImageFormat, swapChainExtent);
         createDepthResources();
         createFramebuffers();
-        createCommandPool();
         createTextureSampler();
         createCommandBuffers();
         createSyncObjects();
@@ -325,7 +322,7 @@ private:
             vkDestroyFence(gpu.logical_gpu, inFlightFences[i], nullptr);
         }
 
-        vkDestroyCommandPool(gpu.logical_gpu, commandPool, nullptr);
+        vkDestroyCommandPool(gpu.logical_gpu, gpu.commandPool, nullptr);
 
         vkDestroyDevice(gpu.logical_gpu, nullptr);
 
@@ -812,19 +809,6 @@ private:
         }
     }
 
-    void createCommandPool() {
-        QueueFamilyIndices queueFamilyIndices(gpu.physical_gpu, surface);
-
-        VkCommandPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-        if (vkCreateCommandPool(gpu.logical_gpu, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create command pool!");
-        }
-    }
-
     void createDepthResources() {
         VkFormat depthFormat = findDepthFormat();
         imageCreator->createImage(swapChainExtent.width, swapChainExtent.height, msaa->getSampleCount(), depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depthImage);
@@ -1081,7 +1065,7 @@ private:
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = commandPool;
+        allocInfo.commandPool = gpu.commandPool;
         allocInfo.commandBufferCount = 1;
 
         VkCommandBuffer commandBuffer;
@@ -1107,7 +1091,7 @@ private:
         vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
         vkQueueWaitIdle(graphicsQueue);
 
-        vkFreeCommandBuffers(gpu.logical_gpu, commandPool, 1, &commandBuffer);
+        vkFreeCommandBuffers(gpu.logical_gpu, gpu.commandPool, 1, &commandBuffer);
     }
 
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
@@ -1206,7 +1190,7 @@ private:
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = commandPool;
+        allocInfo.commandPool = gpu.commandPool;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount = (uint32_t) commandBuffers.size();
 

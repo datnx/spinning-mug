@@ -77,7 +77,14 @@ GPU::GPU(VkInstance vulkan_instance, VkSurfaceKHR surface) {
     vkGetPhysicalDeviceProperties(physical_gpu, &device_properties);
     min_uboOffset = device_properties.limits.minUniformBufferOffsetAlignment;
 
-    createLogicalDevice(surface);
+    QueueFamilyIndices indices(physical_gpu, surface);
+
+    createLogicalDevice(surface, indices);
+
+    vkGetDeviceQueue(logical_gpu, indices.graphicsFamily.value(), 0, &graphicsQueue);
+    vkGetDeviceQueue(logical_gpu, indices.presentFamily.value(), 0, &presentQueue);
+
+    createCommandPool(indices);
 }
 
 void GPU::pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface) {
@@ -109,9 +116,7 @@ void GPU::pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface) {
     }
 }
 
-void GPU::createLogicalDevice(VkSurfaceKHR surface) {
-    QueueFamilyIndices indices(physical_gpu, surface);
-
+void GPU::createLogicalDevice(VkSurfaceKHR surface, QueueFamilyIndices& indices) {
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
@@ -150,9 +155,6 @@ void GPU::createLogicalDevice(VkSurfaceKHR surface) {
     if (vkCreateDevice(physical_gpu, &createInfo, nullptr, &logical_gpu) != VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
-
-    vkGetDeviceQueue(logical_gpu, indices.graphicsFamily.value(), 0, &graphicsQueue);
-    vkGetDeviceQueue(logical_gpu, indices.presentFamily.value(), 0, &presentQueue);
 }
 
 bool GPU::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
@@ -210,5 +212,16 @@ void GPU::allocateMemory(VkDeviceSize size, uint32_t mem_type_index, VkDeviceMem
 
     if (vkAllocateMemory(logical_gpu, &allocInfo, nullptr, &memory) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
+    }
+}
+
+void GPU::createCommandPool(QueueFamilyIndices& indices) {
+    VkCommandPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    poolInfo.queueFamilyIndex = indices.graphicsFamily.value();
+
+    if (vkCreateCommandPool(logical_gpu, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create command pool!");
     }
 }
