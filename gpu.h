@@ -38,6 +38,8 @@ public:
 
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
+	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+
 private:
 	void pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface);
 
@@ -50,6 +52,4 @@ private:
 	void createCommandPool(QueueFamilyIndices& indices);
 
 	VkCommandBuffer beginSingleTimeCommands();
-
-	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 };
