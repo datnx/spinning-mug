@@ -42,6 +42,8 @@ public:
 
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
+	uint64_t getAlignSize(uint64_t size);
+
 private:
 	void pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface);
 

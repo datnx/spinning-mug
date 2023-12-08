@@ -267,3 +267,8 @@ void GPU::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
 
     vkFreeCommandBuffers(logical_gpu, commandPool, 1, &commandBuffer);
 }
+
+uint64_t GPU::getAlignSize(uint64_t size) {
+    if (size % min_uboOffset == 0) return size;
+    else return (size / min_uboOffset + 1) * min_uboOffset;
+}
