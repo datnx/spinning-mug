@@ -1,5 +1,4 @@
 #include <stdexcept>
-#include <vector>
 #include <set>
 
 #include "gpu.h"
