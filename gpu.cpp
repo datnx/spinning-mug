@@ -215,6 +215,16 @@ void GPU::allocateMemory(VkDeviceSize size, uint32_t mem_type_index, VkDeviceMem
     }
 }
 
+void GPU::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+    VkBufferCopy copyRegion{};
+    copyRegion.size = size;
+    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+    endSingleTimeCommands(commandBuffer);
+}
+
 void GPU::createCommandPool(QueueFamilyIndices& indices) {
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;

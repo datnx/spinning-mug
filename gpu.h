@@ -35,6 +35,8 @@ public:
 
 	void allocateMemory(VkDeviceSize size, uint32_t mem_type_index, VkDeviceMemory& memory);
 
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
 private:
 	void pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface);
 
