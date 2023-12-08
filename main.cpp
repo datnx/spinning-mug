@@ -856,7 +856,7 @@ private:
 
         memoryAllocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
 
-        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+        gpu.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
         vkDestroyBuffer(gpu.logical_gpu, stagingBuffer, nullptr);
         vkFreeMemory(gpu.logical_gpu, stagingBufferMemory, nullptr);
@@ -1046,16 +1046,6 @@ private:
         vkBeginCommandBuffer(commandBuffer, &beginInfo);
 
         return commandBuffer;
-    }
-
-    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
-
-        VkBufferCopy copyRegion{};
-        copyRegion.size = size;
-        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-        gpu.endSingleTimeCommands(commandBuffer);
     }
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
