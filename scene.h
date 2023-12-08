@@ -5,6 +5,7 @@
 #include "vertex.h"
 #include "light.h"
 #include "camera.h"
+#include "buffer.h"
 
 class Mesh {
 public:
@@ -27,10 +28,13 @@ public:
 	std::vector<Texture> textures;
 	light lights;
 	Camera camera;
+	Buffer vertex_buffer;
 	
 	// Get the total number of vertices in the scene
 	int get_num_vertices();
 
 	// Get the total number of indices in the scene
 	int get_num_indices();
+
+	void createVertexBuffer(GPU* gpu);
 };
