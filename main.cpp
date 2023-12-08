@@ -1051,20 +1051,6 @@ private:
         return commandBuffer;
     }
 
-    void endSingleTimeCommands(VkCommandBuffer commandBuffer) {
-        vkEndCommandBuffer(commandBuffer);
-
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-
-        vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(graphicsQueue);
-
-        vkFreeCommandBuffers(gpu.logical_gpu, gpu.commandPool, 1, &commandBuffer);
-    }
-
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
@@ -1072,7 +1058,7 @@ private:
         copyRegion.size = size;
         vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-        endSingleTimeCommands(commandBuffer);
+        gpu.endSingleTimeCommands(commandBuffer);
     }
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
@@ -1121,7 +1107,7 @@ private:
             1, &barrier
         );
 
-        endSingleTimeCommands(commandBuffer);
+        gpu.endSingleTimeCommands(commandBuffer);
     }
 
     void copyBufferToImage(VkBuffer buffer, VkDeviceSize buffer_offset, VkImage image, uint32_t width, uint32_t height) {
@@ -1153,7 +1139,7 @@ private:
             &region
         );
 
-        endSingleTimeCommands(commandBuffer);
+        gpu.endSingleTimeCommands(commandBuffer);
     }
 
     void createCommandBuffers() {
