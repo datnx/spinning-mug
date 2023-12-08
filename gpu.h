@@ -45,4 +45,6 @@ private:
 	bool checkDeviceExtensionSupport();
 
 	void createCommandPool(QueueFamilyIndices& indices);
+
+	VkCommandBuffer beginSingleTimeCommands();
 };
