@@ -38,6 +38,8 @@ public:
 
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
+	VkCommandBuffer beginSingleTimeCommands();
+
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
 private:
@@ -50,6 +52,4 @@ private:
 	bool checkDeviceExtensionSupport();
 
 	void createCommandPool(QueueFamilyIndices& indices);
-
-	VkCommandBuffer beginSingleTimeCommands();
 };
