@@ -29,6 +29,8 @@ public:
 	light lights;
 	Camera camera;
 	Buffer vertex_buffer;
+	Buffer index_buffer;
+	//Buffer uniform_buffer;
 	
 	// Get the total number of vertices in the scene
 	int get_num_vertices();
@@ -37,4 +39,6 @@ public:
 	int get_num_indices();
 
 	void createVertexBuffer(GPU* gpu);
+
+	void createIndexBuffer(GPU* gpu);
 };
