@@ -237,7 +237,7 @@ private:
         createTextureImages();
         createTextureImageViews();
 
-        createVertexBuffer();
+        scene->createVertexBuffer(&gpu);
         createIndexBuffer();
         createUniformBuffer();
         createDescriptorPool();
@@ -838,31 +838,6 @@ private:
 
     bool hasStencilComponent(VkFormat format) {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
-    }
-
-    void createVertexBuffer() {
-        VkDeviceSize bufferSize = sizeof(Vertex) * scene->get_num_vertices();
-
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        memoryAllocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-        void* data;
-        vkMapMemory(gpu.logical_gpu, stagingBufferMemory, 0, bufferSize, 0, &data);
-        size_t offset = 0;
-        for (int i = 0; i < scene->meshes.size(); i++) {
-            size_t vertices_size = sizeof(Vertex) * scene->meshes[i].vertices.size();
-            memcpy((char*)data + offset, scene->meshes[i].vertices.data(), vertices_size);
-            offset += vertices_size;
-        }
-        vkUnmapMemory(gpu.logical_gpu, stagingBufferMemory);
-
-        memoryAllocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-
-        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-        vkDestroyBuffer(gpu.logical_gpu, stagingBuffer, nullptr);
-        vkFreeMemory(gpu.logical_gpu, stagingBufferMemory, nullptr);
     }
 
     void createIndexBuffer() {
