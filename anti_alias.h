@@ -7,9 +7,7 @@
 class MSAA {
 private:
 	VkSampleCountFlagBits msaaSamples;
-	VkPhysicalDevice physicalDevice;
-	VkDevice device;
-	MemoryAllocator* memAllocator;
+	GPU* gpu;
 	VkSampleCountFlagBits max_msaaSamples;
 	ImageCreator* imageCreator;
 	VkImage colorImage;
@@ -17,7 +15,7 @@ private:
 	VkImageView colorImageView;
 
 public:
-	MSAA(VkPhysicalDevice physical_device, VkDevice logical_device, MemoryAllocator* mem_allocator, ImageCreator* img_creator);
+	MSAA(GPU* gpu_, ImageCreator* img_creator);
 	VkSampleCountFlagBits getMaxUsableSampleCount();
 	VkSampleCountFlagBits getSampleCount();
 	void setSampleCount(VkSampleCountFlagBits sample_count);
