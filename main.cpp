@@ -208,7 +208,7 @@ private:
         memoryAllocator = new MemoryAllocator(gpu.physical_gpu, gpu.logical_gpu);
         imageCreator = new ImageCreator(gpu.logical_gpu);
         createSwapChain();
-        msaa = new MSAA(gpu.physical_gpu, gpu.logical_gpu, memoryAllocator, imageCreator);
+        msaa = new MSAA(&gpu, imageCreator);
         msaa->setSampleCount(VK_SAMPLE_COUNT_4_BIT);
         createImageViews();
         renderPass = new RenderPass(gpu.logical_gpu, swapChainImageFormat, findDepthFormat(), msaa->getSampleCount());
