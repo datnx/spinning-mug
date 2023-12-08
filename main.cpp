@@ -235,7 +235,7 @@ private:
         createTextureImageViews();
 
         scene->createVertexBuffer(&gpu);
-        createIndexBuffer();
+        scene->createIndexBuffer(&gpu);
         createUniformBuffer();
         createDescriptorPool();
         createDescriptorSets();
@@ -835,31 +835,6 @@ private:
 
     bool hasStencilComponent(VkFormat format) {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
-    }
-
-    void createIndexBuffer() {
-        VkDeviceSize bufferSize = sizeof(uint16_t) * scene->get_num_indices();
-
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        memoryAllocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-        void* data;
-        vkMapMemory(gpu.logical_gpu, stagingBufferMemory, 0, bufferSize, 0, &data);
-        size_t offset = 0;
-        for (int i = 0; i < scene->meshes.size(); i++) {
-            size_t indices_size = sizeof(uint16_t) * scene->meshes[i].indices.size();
-            memcpy((char*)data + offset, scene->meshes[i].indices.data(), indices_size);
-            offset += indices_size;
-        }
-        vkUnmapMemory(gpu.logical_gpu, stagingBufferMemory);
-
-        memoryAllocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-
-        gpu.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-        vkDestroyBuffer(gpu.logical_gpu, stagingBuffer, nullptr);
-        vkFreeMemory(gpu.logical_gpu, stagingBufferMemory, nullptr);
     }
 
     uint64_t getAlignSize(uint64_t size) {
