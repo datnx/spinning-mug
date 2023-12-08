@@ -244,3 +244,17 @@ VkCommandBuffer GPU::beginSingleTimeCommands() {
 
     return commandBuffer;
 }
+
+void GPU::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
+    vkEndCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(graphicsQueue);
+
+    vkFreeCommandBuffers(logical_gpu, commandPool, 1, &commandBuffer);
+}

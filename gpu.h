@@ -47,4 +47,6 @@ private:
 	void createCommandPool(QueueFamilyIndices& indices);
 
 	VkCommandBuffer beginSingleTimeCommands();
+
+	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 };
