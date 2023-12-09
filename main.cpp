@@ -122,10 +122,6 @@ private:
     uint64_t min_uboOffset;
 
     FragmentUniform fubo;
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
 
     VkImage depthImage;
     VkDeviceMemory depthImageMemory;
@@ -285,12 +281,6 @@ private:
         vkDestroyPipelineLayout(gpu.logical_gpu, pipelineLayout, nullptr);
 
         delete renderPass;
-
-        vkDestroyBuffer(gpu.logical_gpu, indexBuffer, nullptr);
-        vkFreeMemory(gpu.logical_gpu, indexBufferMemory, nullptr);
-
-        vkDestroyBuffer(gpu.logical_gpu, vertexBuffer, nullptr);
-        vkFreeMemory(gpu.logical_gpu, vertexBufferMemory, nullptr);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(gpu.logical_gpu, renderFinishedSemaphores[i], nullptr);
