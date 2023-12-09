@@ -94,7 +94,6 @@ private:
 
     GPU gpu;
 
-    MemoryAllocator* memoryAllocator;
     ImageCreator* imageCreator;
 
     MSAA* msaa;
@@ -185,7 +184,6 @@ private:
 
         // instantiate GPU
         gpu = GPU(instance, surface);
-        memoryAllocator = new MemoryAllocator(gpu.physical_gpu, gpu.logical_gpu);
         imageCreator = new ImageCreator(gpu.logical_gpu);
         createSwapChain();
         msaa = new MSAA(&gpu, imageCreator);
@@ -267,7 +265,6 @@ private:
 
         delete msaa;
         delete imageCreator;
-        delete memoryAllocator;
 
         delete scene;
 
@@ -327,10 +324,6 @@ private:
         Load images from files and create texture images
         */
 
-        // staging buffer
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-
         // image size
         VkDeviceSize totalImageSize = 0;
         std::vector<VkDeviceSize> imageSize;
@@ -360,12 +353,12 @@ private:
         }
 
         // create staging buffer
-        memoryAllocator->createBuffer(totalImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        Buffer staging_buffer(&gpu, totalImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         // map the staging buffer memory on the GPU to a memory block on the RAM
         void* data;
-        vkMapMemory(gpu.logical_gpu, stagingBufferMemory, 0, totalImageSize, 0, &data);
+        vkMapMemory(gpu.logical_gpu, staging_buffer.memory, 0, totalImageSize, 0, &data);
 
         // copy the image data to the mapped memory
         int offset = 0;
@@ -384,7 +377,7 @@ private:
         }
 
         // After copy is complete, unmap the GPU memory
-        vkUnmapMemory(gpu.logical_gpu, stagingBufferMemory);
+        vkUnmapMemory(gpu.logical_gpu, staging_buffer.memory);
 
         // create the VkImages and get memory requirements
         textureImage.resize(scene->textures.size());
@@ -401,8 +394,9 @@ private:
         }
 
         // allocate memory
-        memoryAllocator->allocateMemory(totalRequiredSize,
-            memoryAllocator->findMemoryType(typeFilter, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT), textureImageMemory);
+        gpu.allocateMemory(totalRequiredSize,
+            gpu.findMemoryType(typeFilter, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+            textureImageMemory);
 
         // bind the VkImage to the memory and copy data from the staging buffer to the VkImage
         VkDeviceSize imageOffset = 0;
@@ -414,17 +408,14 @@ private:
 
             // copy data
             transitionImageLayout(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            copyBufferToImage(stagingBuffer, bufferOffset, textureImage[i], static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]));
+            copyBufferToImage(staging_buffer.buffer, bufferOffset, textureImage[i],
+                static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]));
             transitionImageLayout(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
             // update the offset
             imageOffset += memRequirements[i].size;
             bufferOffset += imageSize[i];
         }
-
-        // free the staging buffer
-        vkDestroyBuffer(gpu.logical_gpu, stagingBuffer, nullptr);
-        vkFreeMemory(gpu.logical_gpu, stagingBufferMemory, nullptr);
     }
 
     void createTextureImageViews() {
@@ -780,7 +771,9 @@ private:
         imageCreator->createImage(swapChainExtent.width, swapChainExtent.height, msaa->getSampleCount(), depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depthImage);
         VkMemoryRequirements memRequirements;
         vkGetImageMemoryRequirements(gpu.logical_gpu, depthImage, &memRequirements);
-        memoryAllocator->allocateMemory(memRequirements.size, memoryAllocator->findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT), depthImageMemory);
+        gpu.allocateMemory(memRequirements.size,
+            gpu.findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+            depthImageMemory);
         vkBindImageMemory(gpu.logical_gpu, depthImage, depthImageMemory, 0);
         depthImageView = imageCreator->createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
