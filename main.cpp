@@ -35,8 +35,6 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
-
 // This function is used for debugging purpose
 void print_matrix(glm::mat4 m) {
     std::cout << m[0][0] << " " << m[1][0] << " " << m[2][0] << " " << m[3][0] << std::endl;
@@ -75,16 +73,6 @@ struct SwapChainSupportDetails {
     VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
-};
-
-struct ViewProjectrion {
-    glm::mat4 view;
-    glm::mat4 proj;
-};
-
-struct FragmentUniform {
-    light lights;
-    alignas(16) glm::vec3 eye;
 };
 
 class HelloTriangleApplication {
@@ -142,10 +130,6 @@ private:
     VkImage depthImage;
     VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
-
-    VkBuffer uniformBuffers;
-    VkDeviceMemory uniformBuffersMemory;
-    void* uniformBuffersMapped;
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
@@ -236,7 +220,7 @@ private:
 
         scene->createVertexBuffer(&gpu);
         scene->createIndexBuffer(&gpu);
-        createUniformBuffer();
+        scene->createUniformBuffer(&gpu);
         createDescriptorPool();
         createDescriptorSets();
     }
@@ -289,8 +273,7 @@ private:
         delete imageCreator;
         delete memoryAllocator;
 
-        vkDestroyBuffer(gpu.logical_gpu, uniformBuffers, nullptr);
-        vkFreeMemory(gpu.logical_gpu, uniformBuffersMemory, nullptr);
+        delete scene;
 
         vkDestroyDescriptorPool(gpu.logical_gpu, descriptorPool, nullptr);
 
@@ -837,18 +820,6 @@ private:
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
-    void createUniformBuffer() {
-        VkDeviceSize bufferSize = (
-            gpu.getAlignSize(sizeof(ViewProjectrion)) +
-            gpu.getAlignSize(sizeof(FragmentUniform)) +
-            scene->meshes.size() * gpu.getAlignSize(sizeof(glm::mat4))
-        ) * MAX_FRAMES_IN_FLIGHT;
-
-        memoryAllocator->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers, uniformBuffersMemory);
-
-        vkMapMemory(gpu.logical_gpu, uniformBuffersMemory, 0, bufferSize, 0, &uniformBuffersMapped);
-    }
-
     void createDescriptorPool() {
         /*
         create the discriptor pool
@@ -933,14 +904,16 @@ private:
                 gpu.getAlignSize(sizeof(FragmentUniform)) +
                 scene->meshes.size() * gpu.getAlignSize(sizeof(glm::mat4))
             );
-            updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size())], uniformBuffers, offset, sizeof(ViewProjectrion));
+            updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size())],
+                scene->uniform_buffer.buffer, offset, sizeof(ViewProjectrion));
             updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size())],
                 descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1)], 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 &bufferInfos[i * (2 + scene->meshes.size())], nullptr);
 
             // eye location and lights
             offset += gpu.getAlignSize(sizeof(ViewProjectrion));
-            updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size()) + 1], uniformBuffers, offset, sizeof(FragmentUniform));
+            updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size()) + 1],
+                scene->uniform_buffer.buffer, offset, sizeof(FragmentUniform));
             updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size()) + 1],
                 descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1)], 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 &bufferInfos[i * (2 + scene->meshes.size()) + 1], nullptr);
@@ -956,7 +929,8 @@ private:
             // meshes
             offset += gpu.getAlignSize(sizeof(FragmentUniform));
             for (int j = 0; j < scene->meshes.size(); j++) {
-                updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size()) + 2 + j], uniformBuffers, offset, sizeof(glm::mat4));
+                updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size()) + 2 + j],
+                    scene->uniform_buffer.buffer, offset, sizeof(glm::mat4));
                 updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size()) + 2 + scene->textures.size() + j],
                     descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1) + scene->textures.size() + 1 + j], 0,
                     VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &bufferInfos[i * (2 + scene->meshes.size()) + 2 + j], nullptr);
@@ -1217,7 +1191,7 @@ private:
 
         vkResetFences(gpu.logical_gpu, 1, &inFlightFences[currentFrame]);
 
-        char* p = (char*)uniformBuffersMapped;
+        char* p = (char*)scene->uniformBuffersMapped;
         size_t view_projection_size = gpu.getAlignSize(sizeof(ViewProjectrion));
         size_t fragment_size = gpu.getAlignSize(sizeof(FragmentUniform));
         size_t model_size = gpu.getAlignSize(sizeof(glm::mat4));

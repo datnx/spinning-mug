@@ -71,3 +71,17 @@ void Scene::createIndexBuffer(GPU* gpu) {
     vkDestroyBuffer(gpu->logical_gpu, staging_buffer.buffer, nullptr);
     vkFreeMemory(gpu->logical_gpu, staging_buffer.memory, nullptr);
 }
+
+void Scene::createUniformBuffer(GPU* gpu) {
+    VkDeviceSize bufferSize = (
+        gpu->getAlignSize(sizeof(ViewProjectrion)) +
+        gpu->getAlignSize(sizeof(FragmentUniform)) +
+        meshes.size() * gpu->getAlignSize(sizeof(glm::mat4))
+    ) * MAX_FRAMES_IN_FLIGHT;
+
+    uniform_buffer = Buffer(gpu, bufferSize,
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    vkMapMemory(gpu->logical_gpu, uniform_buffer.memory, 0, bufferSize, 0, &uniformBuffersMapped);
+}
