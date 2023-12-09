@@ -1,7 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
-
+#include "gpu.h"
 #include "image.h"
 
 class MSAA {
