@@ -69,6 +69,15 @@ SwapChainSupportDetails::SwapChainSupportDetails(VkPhysicalDevice device, VkSurf
     }
 }
 
+GPU::GPU() {
+    physical_gpu = VK_NULL_HANDLE;
+    logical_gpu = VK_NULL_HANDLE;
+    min_uboOffset = 0;
+    graphicsQueue = VK_NULL_HANDLE;
+    presentQueue = VK_NULL_HANDLE;
+    commandPool = VK_NULL_HANDLE;
+}
+
 GPU::GPU(VkInstance vulkan_instance, VkSurfaceKHR surface) {
     pickPhysicalDevice(vulkan_instance, surface);
 

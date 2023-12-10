@@ -30,6 +30,8 @@ public:
 	VkQueue presentQueue;
 	VkCommandPool commandPool;
 
+	GPU();
+
 	GPU(VkInstance vulkan_instance, VkSurfaceKHR surface);
 
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
