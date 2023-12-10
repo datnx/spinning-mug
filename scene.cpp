@@ -4,6 +4,12 @@ Texture::Texture(std::string path) {
 	file_path = path;
 }
 
+Scene::~Scene() {
+    delete vertex_buffer;
+    delete index_buffer;
+    delete uniform_buffer;
+}
+
 int Scene::get_num_vertices() {
 	int count = 0;
 	for (int i = 0; i < meshes.size(); i++) {
@@ -36,11 +42,11 @@ void Scene::createVertexBuffer(GPU* gpu) {
     }
     vkUnmapMemory(gpu->logical_gpu, staging_buffer.memory);
 
-    vertex_buffer = Buffer(gpu, bufferSize,
+    vertex_buffer = new Buffer(gpu, bufferSize,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    gpu->copyBuffer(staging_buffer.buffer, vertex_buffer.buffer, bufferSize);
+    gpu->copyBuffer(staging_buffer.buffer, vertex_buffer->buffer, bufferSize);
 }
 
 void Scene::createIndexBuffer(GPU* gpu) {
@@ -59,14 +65,11 @@ void Scene::createIndexBuffer(GPU* gpu) {
     }
     vkUnmapMemory(gpu->logical_gpu, staging_buffer.memory);
 
-    index_buffer = Buffer(gpu, bufferSize,
+    index_buffer = new Buffer(gpu, bufferSize,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    gpu->copyBuffer(staging_buffer.buffer, index_buffer.buffer, bufferSize);
-
-    vkDestroyBuffer(gpu->logical_gpu, staging_buffer.buffer, nullptr);
-    vkFreeMemory(gpu->logical_gpu, staging_buffer.memory, nullptr);
+    gpu->copyBuffer(staging_buffer.buffer, index_buffer->buffer, bufferSize);
 }
 
 void Scene::createUniformBuffer(GPU* gpu) {
@@ -76,9 +79,9 @@ void Scene::createUniformBuffer(GPU* gpu) {
         meshes.size() * gpu->getAlignSize(sizeof(glm::mat4))
     ) * MAX_FRAMES_IN_FLIGHT;
 
-    uniform_buffer = Buffer(gpu, bufferSize,
+    uniform_buffer = new Buffer(gpu, bufferSize,
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    vkMapMemory(gpu->logical_gpu, uniform_buffer.memory, 0, bufferSize, 0, &uniformBuffersMapped);
+    vkMapMemory(gpu->logical_gpu, uniform_buffer->memory, 0, bufferSize, 0, &uniformBuffersMapped);
 }

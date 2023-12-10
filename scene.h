@@ -40,10 +40,12 @@ public:
 	std::vector<Texture> textures;
 	light lights;
 	Camera camera;
-	Buffer vertex_buffer;
-	Buffer index_buffer;
-	Buffer uniform_buffer;
+	Buffer* vertex_buffer;
+	Buffer* index_buffer;
+	Buffer* uniform_buffer;
 	void* uniformBuffersMapped;
+
+	~Scene();
 	
 	// Get the total number of vertices in the scene
 	int get_num_vertices();

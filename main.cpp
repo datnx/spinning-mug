@@ -882,7 +882,7 @@ private:
                 scene->meshes.size() * gpu.getAlignSize(sizeof(glm::mat4))
             );
             updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size())],
-                scene->uniform_buffer.buffer, offset, sizeof(ViewProjectrion));
+                scene->uniform_buffer->buffer, offset, sizeof(ViewProjectrion));
             updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size())],
                 descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1)], 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 &bufferInfos[i * (2 + scene->meshes.size())], nullptr);
@@ -890,7 +890,7 @@ private:
             // eye location and lights
             offset += gpu.getAlignSize(sizeof(ViewProjectrion));
             updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size()) + 1],
-                scene->uniform_buffer.buffer, offset, sizeof(FragmentUniform));
+                scene->uniform_buffer->buffer, offset, sizeof(FragmentUniform));
             updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size()) + 1],
                 descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1)], 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 &bufferInfos[i * (2 + scene->meshes.size()) + 1], nullptr);
@@ -907,7 +907,7 @@ private:
             offset += gpu.getAlignSize(sizeof(FragmentUniform));
             for (int j = 0; j < scene->meshes.size(); j++) {
                 updateBufferInfo(bufferInfos[i * (2 + scene->meshes.size()) + 2 + j],
-                    scene->uniform_buffer.buffer, offset, sizeof(glm::mat4));
+                    scene->uniform_buffer->buffer, offset, sizeof(glm::mat4));
                 updateDescriptorWrite(descriptorWrites[i * (2 + scene->textures.size() + scene->meshes.size()) + 2 + scene->textures.size() + j],
                     descriptorSets[i * (scene->meshes.size() + scene->textures.size() + 1) + scene->textures.size() + 1 + j], 0,
                     VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &bufferInfos[i * (2 + scene->meshes.size()) + 2 + j], nullptr);
@@ -1092,10 +1092,10 @@ private:
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        VkBuffer vertexBuffers[] = {scene->vertex_buffer.buffer};
+        VkBuffer vertexBuffers[] = {scene->vertex_buffer->buffer};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, scene->index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindIndexBuffer(commandBuffer, scene->index_buffer->buffer, 0, VK_INDEX_TYPE_UINT16);
 
         // Bind view matrix, projection matrix, lights, eye position
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
