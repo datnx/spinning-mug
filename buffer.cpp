@@ -9,8 +9,7 @@ Buffer::Buffer() {
 }
 
 Buffer::Buffer(GPU* gpu_, VkDeviceSize size, VkBufferUsageFlags usage,
-	VkMemoryPropertyFlags properties)
-{
+	VkMemoryPropertyFlags properties) {
 
 	// device
 	gpu = gpu_;
