@@ -2,6 +2,12 @@
 
 #include "buffer.h"
 
+Buffer::Buffer() {
+	gpu = nullptr;
+	buffer = VK_NULL_HANDLE;
+	memory = VK_NULL_HANDLE;
+}
+
 Buffer::Buffer(GPU* gpu_, VkDeviceSize size, VkBufferUsageFlags usage,
 	VkMemoryPropertyFlags properties)
 {

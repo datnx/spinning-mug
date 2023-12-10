@@ -17,6 +17,7 @@ public:
 	VkDeviceMemory memory;
 
 	// constructor
+	Buffer();
 	Buffer(GPU* gpu_, VkDeviceSize size, VkBufferUsageFlags usage,
 		VkMemoryPropertyFlags properties);
 
