@@ -41,9 +41,6 @@ void Scene::createVertexBuffer(GPU* gpu) {
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     gpu->copyBuffer(staging_buffer.buffer, vertex_buffer.buffer, bufferSize);
-
-    vkDestroyBuffer(gpu->logical_gpu, staging_buffer.buffer, nullptr);
-    vkFreeMemory(gpu->logical_gpu, staging_buffer.memory, nullptr);
 }
 
 void Scene::createIndexBuffer(GPU* gpu) {
