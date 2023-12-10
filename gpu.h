@@ -51,9 +51,9 @@ private:
 
 	void createLogicalDevice(VkSurfaceKHR surface, QueueFamilyIndices& indices);
 
-	bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
-
-	bool checkDeviceExtensionSupport();
-
 	void createCommandPool(QueueFamilyIndices& indices);
 };
+
+bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
+
+bool checkDeviceExtensionSupport(VkPhysicalDevice device);

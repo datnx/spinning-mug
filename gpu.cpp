@@ -165,10 +165,10 @@ void GPU::createLogicalDevice(VkSurfaceKHR surface, QueueFamilyIndices& indices)
     }
 }
 
-bool GPU::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
+bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
     QueueFamilyIndices indices(device, surface);
 
-    bool extensionsSupported = checkDeviceExtensionSupport();
+    bool extensionsSupported = checkDeviceExtensionSupport(device);
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
@@ -182,12 +182,12 @@ bool GPU::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
     return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
 }
 
-bool GPU::checkDeviceExtensionSupport() {
+bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
     uint32_t extensionCount;
-    vkEnumerateDeviceExtensionProperties(physical_gpu, nullptr, &extensionCount, nullptr);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
     std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-    vkEnumerateDeviceExtensionProperties(physical_gpu, nullptr, &extensionCount, availableExtensions.data());
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
     std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
