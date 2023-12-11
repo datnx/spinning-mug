@@ -70,6 +70,9 @@ int Scene::get_num_indices() {
 	for (int i = 0; i < meshes.size(); i++) {
 		count += meshes[i].indices.size();
 	}
+	for (int i = 0; i < meshes_with_normal_map.size(); i++) {
+		count += meshes_with_normal_map[i].indices.size();
+	}
 	return count;
 }
 
@@ -116,6 +119,11 @@ void Scene::createIndexBuffer(GPU* gpu) {
         memcpy((char*)data + offset, meshes[i].indices.data(), indices_size);
         offset += indices_size;
     }
+	for (int i = 0; i < meshes_with_normal_map.size(); i++) {
+		size_t indices_size = sizeof(uint16_t) * meshes_with_normal_map[i].indices.size();
+		memcpy((char*)data + offset, meshes_with_normal_map[i].indices.data(), indices_size);
+		offset += indices_size;
+	}
     vkUnmapMemory(gpu->logical_gpu, staging_buffer.memory);
 
     index_buffer = new Buffer(gpu, bufferSize,
