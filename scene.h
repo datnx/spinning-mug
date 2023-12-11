@@ -5,6 +5,9 @@
 #include "vertex.h"
 #include "light.h"
 #include "camera.h"
+#include "buffer.h"
+
+const int MAX_FRAMES_IN_FLIGHT = 2;
 
 class MeshBase {
 	/*
@@ -44,6 +47,16 @@ struct Texture {
 	Texture(std::string path);
 };
 
+struct ViewProjectrion {
+	glm::mat4 view;
+	glm::mat4 proj;
+};
+
+struct FragmentUniform {
+	light lights;
+	alignas(16) glm::vec3 eye;
+};
+
 class Scene {
 public:
 	std::vector<Mesh> meshes;
@@ -51,10 +64,22 @@ public:
 	std::vector<Texture> textures;
 	light lights;
 	Camera camera;
+	Buffer* vertex_buffer;
+	Buffer* index_buffer;
+	Buffer* uniform_buffer;
+	void* uniformBuffersMapped;
+
+	~Scene();
 	
 	// Get the total number of vertices in the scene
 	int get_num_vertices();
 
 	// Get the total number of indices in the scene
 	int get_num_indices();
+
+	void createVertexBuffer(GPU* gpu);
+
+	void createIndexBuffer(GPU* gpu);
+
+	void createUniformBuffer(GPU* gpu);
 };
