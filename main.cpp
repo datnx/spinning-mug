@@ -26,7 +26,6 @@
 #include "load_model.h"
 #include "light.h"
 #include "anti_alias.h"
-#include "memory.h"
 #include "image.h"
 #include "render_pass.h"
 #include "math.h"
@@ -34,14 +33,6 @@
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
-
-// This function is used for debugging purpose
-void print_matrix(glm::mat4 m) {
-    std::cout << m[0][0] << " " << m[1][0] << " " << m[2][0] << " " << m[3][0] << std::endl;
-    std::cout << m[0][1] << " " << m[1][1] << " " << m[2][1] << " " << m[3][1] << std::endl;
-    std::cout << m[0][2] << " " << m[1][2] << " " << m[2][2] << " " << m[3][2] << std::endl;
-    std::cout << m[0][3] << " " << m[1][3] << " " << m[2][3] << " " << m[3][3] << std::endl;
-}
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
@@ -111,8 +102,6 @@ private:
     std::vector<VkImageView> textureImageView;
     VkDeviceMemory textureImageMemory;
     VkSampler textureSampler;
-
-    uint64_t min_uboOffset;
 
     FragmentUniform fubo;
 
