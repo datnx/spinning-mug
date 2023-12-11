@@ -71,8 +71,11 @@ public:
 
 	~Scene();
 	
-	// Get the total number of vertices in the scene
+	// Get the number of vertices in the scene
 	int get_num_vertices();
+
+	// Get the number of vertices with tangent vector
+	int get_num_vertices_with_tangent();
 
 	// Get the total number of indices in the scene
 	int get_num_indices();

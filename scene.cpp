@@ -57,6 +57,14 @@ int Scene::get_num_vertices() {
 	return count;
 }
 
+int Scene::get_num_vertices_with_tangent() {
+	int count = 0;
+	for (int i = 0; i < meshes_with_normal_map.size(); i++) {
+		count += meshes_with_normal_map[i].vertices.size();
+	}
+	return count;
+}
+
 int Scene::get_num_indices() {
 	int count = 0;
 	for (int i = 0; i < meshes.size(); i++) {
