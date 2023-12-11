@@ -46,6 +46,8 @@ public:
 
 	uint64_t getAlignSize(uint64_t size);
 
+	VkShaderModule createShaderModule(const std::vector<char>& code);
+
 private:
 	void pickPhysicalDevice(VkInstance vulkan_instance, VkSurfaceKHR surface);
 
