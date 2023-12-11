@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include <vector>
+#include <string>
 
 class Pipeline {
 public:
@@ -9,3 +11,5 @@ public:
 
 	Pipeline();
 };
+
+std::vector<char> readFile(const std::string& filename);
