@@ -8,7 +8,6 @@
 
 #include "math.h"
 #include "load_model.h"
-#include "string_utils.h"
 
 void print_matrix(aiMatrix4x4 m) {
 	for (int i = 0; i < 4; i++) {

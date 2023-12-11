@@ -2,7 +2,6 @@
 #include <glm/glm.hpp>
 #include <assimp/types.h>
 
-
 glm::vec3 normalize(glm::vec3 vector);
 glm::mat4 matmul(glm::mat4 A, glm::mat4 B);
 glm::vec3 mul(aiMatrix4x4 M, aiVector3D v);
