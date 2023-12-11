@@ -74,7 +74,8 @@ int Scene::get_num_indices() {
 }
 
 void Scene::createVertexBuffer(GPU* gpu) {
-    VkDeviceSize bufferSize = sizeof(Vertex) * get_num_vertices();
+    VkDeviceSize bufferSize = sizeof(Vertex) * get_num_vertices()
+		+ sizeof(VertexWithTangent) * get_num_vertices_with_tangent();
 
     Buffer staging_buffer(gpu, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -87,6 +88,11 @@ void Scene::createVertexBuffer(GPU* gpu) {
         memcpy((char*)data + offset, meshes[i].vertices.data(), vertices_size);
         offset += vertices_size;
     }
+	for (int i = 0; i < meshes_with_normal_map.size(); i++) {
+		size_t vertices_size = sizeof(VertexWithTangent) * meshes_with_normal_map[i].vertices.size();
+		memcpy((char*)data + offset, meshes_with_normal_map[i].vertices.data(), vertices_size);
+		offset += vertices_size;
+	}
     vkUnmapMemory(gpu->logical_gpu, staging_buffer.memory);
 
     vertex_buffer = new Buffer(gpu, bufferSize,
