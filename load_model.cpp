@@ -54,6 +54,9 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 		aiNode* node = nodes_stack.top();
 		nodes_stack.pop();
 
+		// print node name
+		std::cout << node->mName.C_Str() << std::endl;
+
 		// current transform
 		aiMatrix4x4 transform = transforms_stack.top();
 		transforms_stack.pop();
@@ -64,6 +67,9 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 			
 			// mesh node
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+
+			// print mesh name
+			//std::cout << mesh->mName.C_Str() << std::endl;
 
 			// TODO: handle meshes without diffuse color texture
 			// check if this mesh has a texture
