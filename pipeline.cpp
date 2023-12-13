@@ -7,13 +7,25 @@
 Pipeline::Pipeline() {
 	pipeline = VK_NULL_HANDLE;
 	layout = VK_NULL_HANDLE;
+    vertex_shader_code = "";
+    fragment_shader_code = "";
+    gpu = nullptr;
 }
 
-void Pipeline::create(GPU* gpu, MSAA* msaa, VkRenderPass render_pass,
+void Pipeline::set_gpu(GPU* g) {
+    gpu = g;
+}
+
+void Pipeline::set_shader_codes(std::string vertex, std::string fragment) {
+    vertex_shader_code = vertex;
+    fragment_shader_code = fragment;
+}
+
+void Pipeline::create(MSAA* msaa, VkRenderPass render_pass,
     std::vector<VkDescriptorSetLayout>& setLayouts)
 {
-    auto vertShaderCode = readFile("shaders/vert.spv");
-    auto fragShaderCode = readFile("shaders/frag.spv");
+    auto vertShaderCode = readFile(vertex_shader_code);
+    auto fragShaderCode = readFile(fragment_shader_code);
 
     VkShaderModule vertShaderModule = gpu->createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = gpu->createShaderModule(fragShaderCode);

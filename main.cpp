@@ -95,7 +95,7 @@ private:
 
     VkDescriptorSetLayout descriptorSetLayout_0, descriptorSetLayout_1, descriptorSetLayout_2;
     
-    Pipeline graphic_pipeline;
+    Pipeline graphic_pipeline_0, graphic_pipeline_1;
 
     Scene* scene;
 
@@ -178,7 +178,8 @@ private:
 
         std::vector<VkDescriptorSetLayout> setLayouts =
             {descriptorSetLayout_0, descriptorSetLayout_1, descriptorSetLayout_2};
-        graphic_pipeline.create(&gpu, msaa, renderPass->getRenderPass(), setLayouts);
+        graphic_pipeline_0.create(&gpu, msaa, renderPass->getRenderPass(), setLayouts);
+        //graphic_pipeline_1.create()
         
         msaa->createColorResources(swapChainImageFormat, swapChainExtent);
         createDepthResources();

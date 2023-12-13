@@ -13,8 +13,15 @@ public:
 	VkPipelineLayout layout;
 
 	Pipeline();
-	void create(GPU* gpu, MSAA* msaa, VkRenderPass render_pass,
+	void set_gpu(GPU* g);
+	void set_shader_codes(std::string vertex, std::string fragment);
+	void create(MSAA* msaa, VkRenderPass render_pass,
 		std::vector<VkDescriptorSetLayout>& setLayouts);
+
+private:
+	GPU* gpu;
+	std::string vertex_shader_code;
+	std::string fragment_shader_code;
 };
 
 std::vector<char> readFile(const std::string& filename);
