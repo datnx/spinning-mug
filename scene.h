@@ -17,6 +17,7 @@ public:
 	int index_offset;
 	int vertex_offset;
 	int texture_index;
+	std::string debug_node_name;
 };
 
 struct Texture {
@@ -38,6 +39,10 @@ class Scene {
 public:
 	std::vector<Mesh> meshes;
 	std::vector<Texture> textures;
+	std::vector<std::string> debug_node_names;
+	int debug_index;
+	bool debug_press_n;
+	bool debug_press_b;
 	light lights;
 	Camera camera;
 	Buffer* vertex_buffer;

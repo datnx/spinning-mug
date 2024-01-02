@@ -22,7 +22,7 @@ void print_color(aiColor3D c) {
 	std::cout << "(" << c.r << ", " << c.g << ", " << c.b << ")";
 }
 
-void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& textures, std::string file_path) {
+void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& textures, std::vector<std::string>& debug_nodes, std::string file_path) {
 	/*
 	Using Assimp to load all the meshes and textures
 	*/
@@ -59,6 +59,9 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 		transforms_stack.pop();
 		transform = transform * node->mTransformation;
 
+		// use this flag to only add one node to the debug node list
+		bool debug_added = false;
+
 		// for each mesh in the node
 		for (int i = 0; i < node->mNumMeshes; i++) {
 			
@@ -79,6 +82,12 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 				continue;
 			}
 
+			// add the node to the debug list
+			if (!debug_added) {
+				debug_added = true;
+				debug_nodes.push_back(node->mName.C_Str());
+			}
+
 			// instantiate a Mesh
 			Mesh loaded_mesh = Mesh();
 			loaded_mesh.index_offset = i_offset;
@@ -86,6 +95,7 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 			loaded_mesh.vertices.reserve(mesh->mNumVertices);
 			loaded_mesh.indices.reserve(mesh->mNumFaces * 3);
 			loaded_mesh.texture_index = texture_index[texture_path.C_Str()];
+			loaded_mesh.debug_node_name = node->mName.C_Str();
 			i_offset += mesh->mNumFaces * 3;
 			v_offset += mesh->mNumVertices;
 

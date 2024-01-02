@@ -133,6 +133,28 @@ private:
 
         // awsd to move around
         scene->camera.awsd_movement(window);
+
+        // press n to change the debug index to the next
+        if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE) {
+            if (scene->debug_press_n) {
+                scene->debug_press_n = false;
+                scene->debug_index++;
+                if (scene->debug_index == scene->debug_node_names.size())
+                    scene->debug_index = 0;
+                std::cout << scene->debug_node_names[scene->debug_index] << std::endl;
+            }
+        } else if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) scene->debug_press_n = true;
+
+        // press b to change the debug index back
+        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE) {
+            if (scene->debug_press_b) {
+                scene->debug_press_b = false;
+                scene->debug_index--;
+                if (scene->debug_index == -1)
+                    scene->debug_index = scene->debug_node_names.size() - 1;
+                std::cout << scene->debug_node_names[scene->debug_index] << std::endl;
+            }
+        } else if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) scene->debug_press_b = true;
     }
 
     void initWindow() {
@@ -190,10 +212,13 @@ private:
 
     void loadScene() {
 
-        print_node_structure("3d_models/San_Miguel/san-miguel-low-poly.obj");
+        //print_node_structure("3d_models/San_Miguel/san-miguel-low-poly.obj");
 
         scene = new Scene();
-        load_meshes_and_textures(scene->meshes, scene->textures, "3d_models/San_Miguel/san-miguel-low-poly.obj");
+        load_meshes_and_textures(scene->meshes, scene->textures, scene->debug_node_names, "3d_models/San_Miguel/san-miguel-low-poly.obj");
+        scene->debug_index = 0;
+        scene->debug_press_n = false;
+        scene->debug_press_b = false;
         scene->lights = light();
         scene->lights.load_file("config/directional_lights.txt");
         fubo.lights = scene->lights;
