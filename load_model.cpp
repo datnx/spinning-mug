@@ -47,6 +47,9 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 	// use a hash map to check for loaded texture
 	std::unordered_map<std::string, int> texture_index;
 
+	// use this flag to load only the tree
+	bool tree = false;
+
 	// loop through all the meshes
 	while (!nodes_stack.empty()) {
 
@@ -54,16 +57,38 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 		aiNode* node = nodes_stack.top();
 		nodes_stack.pop();
 
-		// print node name
-		std::cout << node->mName.C_Str() << std::endl;
-
 		// current transform
-		aiMatrix4x4 transform = transforms_stack.top();
+		aiMatrix4x4 old_transform = transforms_stack.top();
 		transforms_stack.pop();
-		transform = transform * node->mTransformation;
+		aiMatrix4x4 transform = old_transform * node->mTransformation;
+
+		// if found node tree, treat it like a root node and load it
+		if (!tree && node->mName == aiString("Tree_Bases")) {
+			
+			// clear the node and transform stack
+			while (!nodes_stack.empty()) nodes_stack.pop();
+			while (!transforms_stack.empty()) transforms_stack.pop();
+
+			// add the new root and transform
+			nodes_stack.push(node);
+			transforms_stack.push(old_transform);
+
+			// restart the loading process
+			tree = true;
+			continue;
+		}
+
+		if (tree) {
+			std::cout << node->mName.C_Str() << std::endl;
+			std::cout << node->mNumChildren << std::endl;
+			std::cout << node->mNumMeshes << std::endl;
+		}
 
 		// for each mesh in the node
 		for (int i = 0; i < node->mNumMeshes; i++) {
+
+			// break right away if we haven't reach the tree
+			if (!tree) break;
 			
 			// mesh node
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
