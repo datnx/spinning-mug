@@ -190,6 +190,8 @@ private:
 
     void loadScene() {
 
+        print_node_structure("3d_models/San_Miguel/san-miguel-low-poly.obj");
+
         scene = new Scene();
         load_meshes_and_textures(scene->meshes, scene->textures, "3d_models/San_Miguel/san-miguel-low-poly.obj");
         scene->lights = light();

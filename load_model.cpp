@@ -123,3 +123,13 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 		}
 	}
 }
+
+void print_node_structure(std::string file_path) {
+	
+	// load the file
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(file_path, aiProcess_Triangulate);
+	if (scene == NULL) throw std::runtime_error("Failed to load the file");
+
+	std::cout << scene->mRootNode->mNumChildren << std::endl;
+}

@@ -9,3 +9,6 @@
 
 // load meshes and textures from file
 void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& textures, std::string file_path);
+
+// print node structure for debugging
+void print_node_structure(std::string file_path);
