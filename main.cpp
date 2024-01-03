@@ -1009,6 +1009,11 @@ private:
                 // if the mesh use the ith texture
                 if (scene->meshes[j].texture_index == i) {
 
+                    // if the mesh is the debug one
+                    if (scene->meshes[j].debug_node_name == scene->debug_node_names[scene->debug_index]) {
+
+                    } else continue;
+
                     // bind the model matrix
                     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphic_pipeline.layout, 2, 1,
                         &descriptorSets[currentFrame * (1 + scene->textures.size() + scene->meshes.size()) + 1 + scene->textures.size() + j], 0, nullptr);
@@ -1079,7 +1084,7 @@ private:
         ViewProjectrion view_proj_matrix;
         view_proj_matrix.view = lookAt(scene->camera.cameraPos,
             scene->camera.cameraPos + scene->camera.cameraFront, scene->camera.cameraUp);
-        view_proj_matrix.proj = perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+        view_proj_matrix.proj = perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 100.0f);
         view_proj_matrix.proj[1][1] *= -1;
 
         memcpy(p + currentFrame * uniform_size, &view_proj_matrix, sizeof(ViewProjectrion));

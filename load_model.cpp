@@ -1,5 +1,6 @@
 #include <fstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <iostream>
@@ -33,7 +34,7 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 
 	// load the file
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(file_path, aiProcess_Triangulate);
+	const aiScene* scene = importer.ReadFile(file_path, 0);
 	if (scene == NULL) throw std::runtime_error("Failed to load the file");
 
 	// prepare to loop through all nodes
@@ -46,6 +47,9 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 
 	// use a hash map to check for loaded texture
 	std::unordered_map<std::string, int> texture_index;
+
+	// use a hash map to check for loaded debug nodes
+	std::unordered_set<std::string> debug_nodes_index;
 
 	// loop through all the meshes
 	while (!nodes_stack.empty()) {
@@ -85,7 +89,10 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 			// add the node to the debug list
 			if (!debug_added) {
 				debug_added = true;
-				debug_nodes.push_back(node->mName.C_Str());
+				if (debug_nodes_index.find(std::string(node->mName.C_Str())) == debug_nodes_index.end()) {
+					debug_nodes_index.insert(node->mName.C_Str());
+					debug_nodes.push_back(node->mName.C_Str());
+				}
 			}
 
 			// instantiate a Mesh
@@ -93,10 +100,10 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 			loaded_mesh.index_offset = i_offset;
 			loaded_mesh.vertex_offset = v_offset;
 			loaded_mesh.vertices.reserve(mesh->mNumVertices);
-			loaded_mesh.indices.reserve(mesh->mNumFaces * 3);
+			//loaded_mesh.indices.reserve(mesh->mNumFaces * 3);
 			loaded_mesh.texture_index = texture_index[texture_path.C_Str()];
 			loaded_mesh.debug_node_name = node->mName.C_Str();
-			i_offset += mesh->mNumFaces * 3;
+			/*i_offset += mesh->mNumFaces * 3;*/
 			v_offset += mesh->mNumVertices;
 
 			// read vertices
@@ -110,9 +117,12 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 			// read indices
 			for (int j = 0; j < mesh->mNumFaces; j++) {
 				aiFace face = mesh->mFaces[j];
-				if (face.mNumIndices != 3) throw std::runtime_error("This is not a triangle");
+				//if (face.mNumIndices != 3) throw std::runtime_error("This is not a triangle");
+				if (face.mNumIndices != 3) continue;
 				loaded_mesh.indices.insert(loaded_mesh.indices.end(), face.mIndices, face.mIndices + 3);
 			}
+
+			i_offset += loaded_mesh.indices.size();
 
 			// transform
 			loaded_mesh.init_transform = glm::mat4(
