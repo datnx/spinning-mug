@@ -155,6 +155,15 @@ private:
                 std::cout << scene->debug_node_names[scene->debug_index] << std::endl;
             }
         } else if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) scene->debug_press_b = true;
+
+        // press t to toggle debug mode
+        if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE) {
+            if (scene->debug_press_t) {
+                scene->debug_press_t = false;
+                scene->debug_mode = !scene->debug_mode;
+                std::cout << "debug mode: " << (scene->debug_mode ? "on" : "off") << std::endl;
+            }
+        } else if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) scene->debug_press_t = true;
     }
 
     void initWindow() {
@@ -219,6 +228,8 @@ private:
         scene->debug_index = 0;
         scene->debug_press_n = false;
         scene->debug_press_b = false;
+        scene->debug_press_t = false;
+        scene->debug_mode = false;
         scene->lights = light();
         scene->lights.load_file("config/directional_lights.txt");
         fubo.lights = scene->lights;
@@ -1010,7 +1021,7 @@ private:
                 if (scene->meshes[j].texture_index == i) {
 
                     // if the mesh is the debug one
-                    if (scene->meshes[j].debug_node_name == scene->debug_node_names[scene->debug_index]) {
+                    if (!scene->debug_mode || scene->meshes[j].debug_node_name == scene->debug_node_names[scene->debug_index]) {
 
                     } else continue;
 

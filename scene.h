@@ -43,6 +43,8 @@ public:
 	int debug_index;
 	bool debug_press_n;
 	bool debug_press_b;
+	bool debug_press_t;
+	bool debug_mode;
 	light lights;
 	Camera camera;
 	Buffer* vertex_buffer;
