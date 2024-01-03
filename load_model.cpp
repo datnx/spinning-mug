@@ -28,13 +28,21 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 	Using Assimp to load all the meshes and textures
 	*/
 
+	bool debug_using_triangulate = true;
+
 	// get folder path
 	std::filesystem::path file_path_ = std::filesystem::path(file_path);
 	std::filesystem::path folder_path = file_path_.parent_path();
 
 	// load the file
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(file_path, 0);
+	const aiScene* scene;
+	if (debug_using_triangulate) {
+		scene = importer.ReadFile(file_path, aiProcess_Triangulate);
+	}
+	else {
+		scene = importer.ReadFile(file_path, 0);
+	}
 	if (scene == NULL) throw std::runtime_error("Failed to load the file");
 
 	// prepare to loop through all nodes
@@ -100,10 +108,8 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 			loaded_mesh.index_offset = i_offset;
 			loaded_mesh.vertex_offset = v_offset;
 			loaded_mesh.vertices.reserve(mesh->mNumVertices);
-			//loaded_mesh.indices.reserve(mesh->mNumFaces * 3);
 			loaded_mesh.texture_index = texture_index[texture_path.C_Str()];
 			loaded_mesh.debug_node_name = node->mName.C_Str();
-			/*i_offset += mesh->mNumFaces * 3;*/
 			v_offset += mesh->mNumVertices;
 
 			// read vertices
@@ -117,11 +123,11 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 			// read indices
 			for (int j = 0; j < mesh->mNumFaces; j++) {
 				aiFace face = mesh->mFaces[j];
-				//if (face.mNumIndices != 3) throw std::runtime_error("This is not a triangle");
 				if (face.mNumIndices != 3) continue;
 				loaded_mesh.indices.insert(loaded_mesh.indices.end(), face.mIndices, face.mIndices + 3);
 			}
 
+			// update the index offset
 			i_offset += loaded_mesh.indices.size();
 
 			// transform
