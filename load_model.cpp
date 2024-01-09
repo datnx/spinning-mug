@@ -9,6 +9,7 @@
 
 #include "math.h"
 #include "load_model.h"
+#include "string_utils.h"
 
 void print_matrix(aiMatrix4x4 m) {
 	for (int i = 0; i < 4; i++) {
@@ -158,4 +159,84 @@ void print_node_structure(std::string file_path) {
 	if (scene == NULL) throw std::runtime_error("Failed to load the file");
 
 	std::cout << scene->mRootNode->mNumChildren << std::endl;
+}
+
+glm::vec3 parse_coordinates(std::string line, int start) {
+	std::vector<std::string> coordinates = split(line.substr(start), ' ');
+	return glm::vec3(std::stof(coordinates[0]), std::stof(coordinates[1]), std::stof(coordinates[2]));
+}
+
+glm::vec2 parse_uv(std::string line) {
+	std::vector<std::string> values = split(line.substr(3), ' ');
+	return glm::vec2(std::stof(values[0]), std::stof(values[1]));
+}
+
+void load_group275_debug(std::vector<Mesh>& meshes, std::vector<std::string>& debug_nodes, std::string file_path) {
+	
+	debug_nodes.push_back("group275_manual");
+
+	// load the file
+	std::ifstream file;
+	file.open(file_path);
+	if (file.fail()) {
+		std::string fail_message = "failed to open " + file_path;
+		throw std::runtime_error(fail_message);
+	}
+
+	// use this flag to mark the begin and end of group275
+	std::string group = "";
+
+	// read line by line
+	std::vector<glm::vec3> coordinates;
+	std::vector<glm::vec3> normals;
+	std::vector<glm::vec2> uv;
+	std::vector<std::string> faces;
+	while (!file.eof()) {
+		std::string line;
+		std::getline(file, line);
+		if (line[0] == 'v' && line[1] == ' ') coordinates.push_back(parse_coordinates(line, 2));
+		if (line[0] == 'v' && line[1] == 'n') normals.push_back(parse_coordinates(line, 3));
+		if (line[0] == 'v' && line[1] == 't') uv.push_back(parse_uv(line));
+		if (line[0] == 'g') group = line.substr(2);
+		if (group == "group275" && line[0] == 'f') faces.push_back(line.substr(2));
+	}
+	file.close();
+
+	// instantiate a Mesh
+	Mesh group275_mesh = Mesh();
+	group275_mesh.init_transform = glm::mat4(1.0f);
+	group275_mesh.vertex_offset = meshes.back().vertex_offset + meshes.back().vertices.size();
+	group275_mesh.index_offset = meshes.back().index_offset + meshes.back().indices.size();
+	group275_mesh.texture_index = 10;
+	group275_mesh.debug_node_name = "group275_manual";
+	
+	// load vertices and indices
+	int index = 0;
+	std::unordered_map<std::string, int> unique_vertices;
+	for (int i = 0; i < faces.size(); i++) {
+		std::vector<std::string> face_vertices = split(faces[i], ' ');
+		std::vector<uint16_t> indices;
+		for (int j = 0; j < face_vertices.size(); j++) {
+			if (unique_vertices.find(face_vertices[j]) == unique_vertices.end()) {
+				unique_vertices[face_vertices[j]] = index;
+				indices.push_back(index);
+				std::vector<std::string> pos_uv_nor_indices = split(face_vertices[j], '/');
+				group275_mesh.vertices.emplace_back(
+					coordinates[std::stoi(pos_uv_nor_indices[0]) - 1],
+					normals[std::stoi(pos_uv_nor_indices[2]) - 1],
+					uv[std::stoi(pos_uv_nor_indices[1]) - 1]
+				);
+				index++;
+			} else indices.push_back(unique_vertices[face_vertices[j]]);
+		}
+		if (indices.size() == 4) {
+			std::vector<uint16_t> triangles = {indices[0], indices[1], indices[2], indices[2], indices[3], indices[0]};
+			group275_mesh.indices.insert(group275_mesh.indices.end(), triangles.begin(), triangles.end());
+		} else if (indices.size() == 3) {
+			group275_mesh.indices.insert(group275_mesh.indices.end(), indices.begin(), indices.end());
+		}
+	}
+
+	// add group275 to the mesh list
+	meshes.push_back(group275_mesh);
 }

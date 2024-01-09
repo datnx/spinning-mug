@@ -12,3 +12,6 @@ void load_meshes_and_textures(std::vector<Mesh>& meshes, std::vector<Texture>& t
 
 // print node structure for debugging
 void print_node_structure(std::string file_path);
+
+// debug load group275
+void load_group275_debug(std::vector<Mesh>& meshes, std::vector<std::string>& debug_nodes, std::string file_path);

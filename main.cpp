@@ -225,6 +225,7 @@ private:
 
         scene = new Scene();
         load_meshes_and_textures(scene->meshes, scene->textures, scene->debug_node_names, "3d_models/San_Miguel/san-miguel-low-poly.obj");
+        load_group275_debug(scene->meshes, scene->debug_node_names, "3d_models/San_Miguel/san-miguel-low-poly.obj");
         scene->debug_index = 0;
         scene->debug_press_n = false;
         scene->debug_press_b = false;
