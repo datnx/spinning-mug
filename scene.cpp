@@ -50,7 +50,7 @@ void Scene::createVertexBuffer(GPU* gpu) {
 }
 
 void Scene::createIndexBuffer(GPU* gpu) {
-    VkDeviceSize bufferSize = sizeof(uint16_t) * get_num_indices();
+    VkDeviceSize bufferSize = sizeof(uint32_t) * get_num_indices();
 
     Buffer staging_buffer(gpu, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -59,7 +59,7 @@ void Scene::createIndexBuffer(GPU* gpu) {
     vkMapMemory(gpu->logical_gpu, staging_buffer.memory, 0, bufferSize, 0, &data);
     size_t offset = 0;
     for (int i = 0; i < meshes.size(); i++) {
-        size_t indices_size = sizeof(uint16_t) * meshes[i].indices.size();
+        size_t indices_size = sizeof(uint32_t) * meshes[i].indices.size();
         memcpy((char*)data + offset, meshes[i].indices.data(), indices_size);
         offset += indices_size;
     }

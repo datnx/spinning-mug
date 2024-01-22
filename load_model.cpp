@@ -337,6 +337,9 @@ void load_meshes_and_textures_obj(
 			continue;
 		}
 
+		// skip if the mesh is not group135
+		//if (debug_nodes[i] != "group135_materials") continue;
+
 		// instantiate the mesh
 		Mesh mesh = Mesh();
 		mesh.init_transform = glm::mat4(1.0f);
@@ -350,7 +353,7 @@ void load_meshes_and_textures_obj(
 		std::unordered_map<std::string, int> unique_vertices;
 		for (int j = 0; j < faces[i].size(); j++) {
 			std::vector<std::string> face_vertices = split(faces[i][j], ' ');
-			std::vector<uint16_t> indices;
+			std::vector<uint32_t> indices;
 			for (int k = 0; k < face_vertices.size(); k++) {
 				if (unique_vertices.find(face_vertices[k]) == unique_vertices.end()) {
 					unique_vertices[face_vertices[k]] = index;
@@ -365,7 +368,7 @@ void load_meshes_and_textures_obj(
 				} else indices.push_back(unique_vertices[face_vertices[k]]);
 			}
 			if (indices.size() == 4) {
-				std::vector<uint16_t> triangles = { indices[0], indices[1], indices[2], indices[2], indices[3], indices[0] };
+				std::vector<uint32_t> triangles = { indices[0], indices[1], indices[2], indices[2], indices[3], indices[0] };
 				mesh.indices.insert(mesh.indices.end(), triangles.begin(), triangles.end());
 			} else if (indices.size() == 3) {
 				mesh.indices.insert(mesh.indices.end(), indices.begin(), indices.end());

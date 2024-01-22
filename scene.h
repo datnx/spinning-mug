@@ -12,7 +12,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 class Mesh {
 public:
 	std::vector<Vertex> vertices;
-	std::vector<uint16_t> indices;
+	std::vector<uint32_t> indices;
 	glm::mat4 init_transform;
 	int index_offset;
 	int vertex_offset;
