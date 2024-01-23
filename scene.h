@@ -23,11 +23,12 @@ public:
 class MeshWithNormalMap {
 public:
 	std::vector<VertexWithTangent> vertices;
-	std::vector<uint16_t> indices;
+	std::vector<uint32_t> indices;
 	glm::mat4 init_transform;
 	int index_offset;
 	int vertex_offset;
 	int texture_index;
+	std::string debug_node_name;
 };
 
 struct Texture {
