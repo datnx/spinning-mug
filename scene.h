@@ -32,6 +32,8 @@ class MeshWithNormalMap : public MeshBase {
 public:
 	std::vector<VertexWithTangent> vertices;
 	int normal_map_index;
+
+	void calculate_tangent_vectors();
 };
 
 struct Texture {
