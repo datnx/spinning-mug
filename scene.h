@@ -30,6 +30,9 @@ public:
 
 	// serialize this mesh to the file
 	void serialize(std::ofstream& file);
+
+	// deserialize the mesh from the file
+	void deserialize(std::ifstream& file);
 };
 
 class MeshWithNormalMap : public MeshBase {
