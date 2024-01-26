@@ -51,6 +51,9 @@ struct Texture {
 
 	// serialize this texture to the file
 	void serialize(std::ofstream& file);
+
+	// deserialize this texture from the file
+	void deserialize(std::ifstream& file);
 };
 
 struct ViewProjectrion {
