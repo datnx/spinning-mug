@@ -100,7 +100,7 @@ void deserialize(
 	// deserialize meshes
 	uint16_t num_meshes;
 	file.read(reinterpret_cast<char*>(&num_meshes), sizeof(uint16_t));
-	meshes.reserve(num_meshes);
+	meshes.resize(num_meshes);
 	for (int i = 0; i < num_meshes; i++) {
 		meshes[i].deserialize(file);
 	}
