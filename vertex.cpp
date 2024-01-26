@@ -1,10 +1,14 @@
 #include "vertex.h"
 
+VertexBase::VertexBase() {}
+
 VertexBase::VertexBase(glm::vec3 p, glm::vec3 n, glm::vec2 uv) {
     pos = p;
     normal = n;
     texCoord = uv;
 }
+
+Vertex::Vertex() {}
 
 Vertex::Vertex(glm::vec3 p, glm::vec3 n, glm::vec2 uv) : VertexBase(p, n, uv) {}
 
