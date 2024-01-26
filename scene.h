@@ -42,7 +42,12 @@ public:
 
 struct Texture {
 	std::string file_path;
+
+	// constructor
 	Texture(std::string path);
+
+	// serialize this texture to the file
+	void serialize(std::ofstream& file);
 };
 
 struct ViewProjectrion {

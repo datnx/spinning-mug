@@ -73,6 +73,12 @@ Texture::Texture(std::string path) {
 	file_path = path;
 }
 
+void Texture::serialize(std::ofstream& file) {
+	uint16_t str_size = file_path.size();
+	file.write(reinterpret_cast<char*>(&str_size), sizeof(uint16_t));
+	file.write(file_path.c_str(), str_size);
+}
+
 Scene::~Scene() {
     delete vertex_buffer;
     delete index_buffer;
