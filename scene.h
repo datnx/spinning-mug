@@ -47,6 +47,7 @@ struct Texture {
 	std::string file_path;
 
 	// constructor
+	Texture();
 	Texture(std::string path);
 
 	// serialize this texture to the file

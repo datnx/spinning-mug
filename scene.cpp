@@ -102,6 +102,8 @@ void MeshWithNormalMap::calculate_tangent_vectors() {
 	}
 }
 
+Texture::Texture() {}
+
 Texture::Texture(std::string path) {
 	file_path = path;
 }
