@@ -84,6 +84,50 @@ void serialize(
 	file.close();
 }
 
+void deserialize(
+	std::vector<Mesh>& meshes,
+	std::vector<Texture>& textures,
+	std::vector<std::string>& debug_nodes,
+	std::string bin_path
+) {
+
+	// open the file
+	std::ifstream file(
+		bin_path.c_str(),
+		std::ifstream::in | std::ifstream::binary
+	);
+
+	// deserialize meshes
+	uint16_t num_meshes;
+	file.read(reinterpret_cast<char*>(&num_meshes), sizeof(uint16_t));
+	meshes.reserve(num_meshes);
+	for (int i = 0; i < num_meshes; i++) {
+		meshes[i].deserialize(file);
+	}
+
+	// serialize textures
+	uint16_t num_textures;
+	file.read(reinterpret_cast<char*>(&num_textures), sizeof(uint16_t));
+	textures.resize(num_textures);
+	for (int i = 0; i < num_textures; i++) {
+		textures[i].deserialize(file);
+	}
+
+	// deserialize debug_nodes
+	uint16_t num_debugs;
+	file.read(reinterpret_cast<char*>(&num_debugs), sizeof(uint16_t));
+	debug_nodes.resize(num_debugs);
+	for (int i = 0; i < num_debugs; i++) {
+		uint16_t str_size;
+		file.read(reinterpret_cast<char*>(&str_size), sizeof(uint16_t));
+		debug_nodes[i].resize(str_size);
+		file.read(&debug_nodes[i][0], str_size);
+	}
+
+	// close the file
+	file.close();
+}
+
 void load_meshes_and_textures_obj(
 	std::vector<Mesh>& meshes,
 	std::vector<Texture>& textures,
@@ -91,6 +135,13 @@ void load_meshes_and_textures_obj(
 	std::string obj_path,
 	std::string mtl_path
 ) {
+
+	// check for serialized file
+	std::string bin_path = obj_path.substr(0, obj_path.length() - 3) + ".bin";
+	if (std::filesystem::exists(bin_path)) {
+		deserialize(meshes, textures, debug_nodes, bin_path);
+		return;
+	}
 
 	// load the file
 	std::ifstream file;
@@ -226,7 +277,7 @@ void load_meshes_and_textures_obj(
 		meshes.push_back(mesh);
 
 		// serialize the model for faster loading next time
-		std::string out_path = obj_path.substr(0, obj_path.length() - 3) + ".bin";
-		serialize(meshes, textures, debug_nodes, out_path);
+		
+		serialize(meshes, textures, debug_nodes, bin_path);
 	}
 }
