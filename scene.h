@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <fstream>
 
 #include "vertex.h"
 #include "light.h"
@@ -26,6 +27,9 @@ public:
 class Mesh : public MeshBase {
 public:
 	std::vector<Vertex> vertices;
+
+	// serialize this mesh to the file
+	void serialize(std::ofstream& file);
 };
 
 class MeshWithNormalMap : public MeshBase {

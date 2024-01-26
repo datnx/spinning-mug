@@ -1,5 +1,35 @@
 #include "scene.h"
 
+void Mesh::serialize(std::ofstream& file) {
+	
+	// serialize vertices
+	uint32_t num_vertices = vertices.size();
+	file.write(reinterpret_cast<char*>(&num_vertices), sizeof(uint32_t));
+	file.write(
+		reinterpret_cast<char*>(vertices.data()),
+		num_vertices * sizeof(Vertex)
+	);
+
+	// serialize indices
+	uint32_t num_indices = indices.size();
+	file.write(reinterpret_cast<char*>(&num_indices), sizeof(uint32_t));
+	file.write(
+		reinterpret_cast<char*>(indices.data()),
+		num_indices * sizeof(uint32_t)
+	);
+
+	// serialize everything else
+	file.write(reinterpret_cast<char*>(&init_transform), sizeof(glm::mat4));
+	file.write(reinterpret_cast<char*>(&index_offset), sizeof(int));
+	file.write(reinterpret_cast<char*>(&vertex_offset), sizeof(int));
+	file.write(reinterpret_cast<char*>(&texture_index), sizeof(int));
+	
+	// serialize debug node name
+	uint16_t str_size = debug_node_name.size();
+	file.write(reinterpret_cast<char*>(&str_size), sizeof(uint16_t));
+	file.write(debug_node_name.c_str(), str_size);
+}
+
 void MeshWithNormalMap::calculate_tangent_vectors() {
 	/*
 	Calculate the tangent vectors based on the math in
