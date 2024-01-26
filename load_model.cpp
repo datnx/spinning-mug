@@ -44,6 +44,46 @@ glm::vec2 parse_uv(std::string line) {
 	return glm::vec2(std::stof(values[0]), std::stof(values[1]));
 }
 
+void serialize(
+	std::vector<Mesh>& meshes,
+	std::vector<Texture>& textures,
+	std::vector<std::string>& debug_nodes,
+	std::string out_path
+) {
+
+	// open the file
+	std::ofstream file(
+		out_path.c_str(),
+		std::ofstream::binary | std::ofstream::out | std::ofstream::trunc
+	);
+
+	// serialize meshes
+	uint16_t num_meshes = meshes.size();
+	file.write(reinterpret_cast<char*>(&num_meshes), sizeof(uint16_t));
+	for (int i = 0; i < num_meshes; i++) {
+		meshes[i].serialize(file);
+	}
+
+	// serialize textures
+	uint16_t num_textures = textures.size();
+	file.write(reinterpret_cast<char*>(&num_textures), sizeof(uint16_t));
+	for (int i = 0; i < num_textures; i++) {
+		textures[i].serialize(file);
+	}
+
+	// serialize debug_nodes
+	uint16_t num_debugs = debug_nodes.size();
+	file.write(reinterpret_cast<char*>(&num_debugs), sizeof(uint16_t));
+	for (int i = 0; i < num_debugs; i++) {
+		uint16_t str_size = debug_nodes[i].size();
+		file.write(reinterpret_cast<char*>(&str_size), sizeof(uint16_t));
+		file.write(debug_nodes[i].c_str(), str_size);
+	}
+
+	// close the file
+	file.close();
+}
+
 void load_meshes_and_textures_obj(
 	std::vector<Mesh>& meshes,
 	std::vector<Texture>& textures,
@@ -184,5 +224,9 @@ void load_meshes_and_textures_obj(
 
 		// done loading this mesh
 		meshes.push_back(mesh);
+
+		// serialize the model for faster loading next time
+		std::string out_path = obj_path.substr(0, obj_path.length() - 3) + ".bin";
+		serialize(meshes, textures, debug_nodes, out_path);
 	}
 }
