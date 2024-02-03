@@ -31,6 +31,9 @@
 #include "math.h"
 #include "scene.h"
 #include "pipeline.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
