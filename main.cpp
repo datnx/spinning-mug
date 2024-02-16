@@ -569,6 +569,7 @@ private:
         createInfo.imageArrayLayers = 1;
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
+        // TODO: optimize QueueFamilyIndices
         QueueFamilyIndices indices(gpu.physical_gpu, surface);
         uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
