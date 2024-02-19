@@ -200,10 +200,10 @@ private:
         glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 
         // hide and capture cursor
-        //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
         // setup mouse callback to process mouse movements
-        //glfwSetCursorPosCallback(window, cursorPosCallback);
+        glfwSetCursorPosCallback(window, cursorPosCallback);
     }
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
@@ -213,7 +213,9 @@ private:
 
     static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
         auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
-        app->scene->camera.mouse_callback(xpos, ypos);
+        if (!app->scene->debug_mode) {
+            app->scene->camera.mouse_callback(xpos, ypos);
+        }
     }
 
     void initVulkan() {
@@ -258,7 +260,7 @@ private:
         scene->debug_press_n = false;
         scene->debug_press_b = false;
         scene->debug_press_t = false;
-        scene->debug_mode = true;
+        scene->debug_mode = false;
         scene->lights = light();
         scene->lights.load_file("config/directional_lights.txt");
         fubo.lights = scene->lights;
@@ -277,8 +279,17 @@ private:
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
             
-            // process keyboard input
-            //processInput(window);
+            // process mouse and keyboard input
+            if (!scene->debug_mode) {
+                if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_NORMAL) {
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                }
+                processInput(window);
+            } else {
+                if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                }
+            }
 
             glfwPollEvents();
 
@@ -288,9 +299,11 @@ private:
             ImGui::NewFrame();
 
             // Simple UI
-            ImGui::Begin("Hello, world!");
-            ImGui::Checkbox("Debug mode", &scene->debug_mode);
-            ImGui::End();
+            if (scene->debug_mode) {
+                ImGui::Begin("Hello, world!");
+                ImGui::Checkbox("Debug mode", &scene->debug_mode);
+                ImGui::End();
+            }
 
             // Rendering
             ImGui::Render();
