@@ -768,6 +768,7 @@ private:
         poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * (scene->meshes.size() + 2));
 
         // the second type image samplers for texture mapping
+        // TODO: maybe we only need as many descriptors and descriptor set as the number of textures.
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * (scene->textures.size()) + 1);
 
