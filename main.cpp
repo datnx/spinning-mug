@@ -70,6 +70,7 @@ public:
         initWindow();
         initVulkan();
         loadScene();
+        initImGui();
         mainLoop();
         cleanup();
     }
@@ -125,6 +126,8 @@ private:
 
     bool framebufferResized = false;
 
+    ImDrawData* imgui_draw_data;
+
     void processInput(GLFWwindow* window) {
         /*
         check for keyboard inputs and act acordingly
@@ -169,6 +172,24 @@ private:
         } else if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) scene->debug_press_t = true;
     }
 
+    void initImGui() {
+        ImGui::CreateContext();
+        ImGui_ImplGlfw_InitForVulkan(window, true);
+        ImGui_ImplVulkan_InitInfo init_info = {};
+        init_info.Instance = instance;
+        init_info.PhysicalDevice = gpu.physical_gpu;
+        init_info.Device = gpu.logical_gpu;
+        QueueFamilyIndices indices(gpu.physical_gpu, surface);
+        init_info.QueueFamily = indices.graphicsFamily.value();
+        init_info.Queue = gpu.graphicsQueue;
+        init_info.DescriptorPool = descriptorPool;
+        init_info.Subpass = 0;
+        init_info.MinImageCount = 2;
+        init_info.ImageCount = swapChainImages.size();
+        init_info.MSAASamples = msaa->getSampleCount();
+        ImGui_ImplVulkan_Init(&init_info, renderPass->getRenderPass());
+    }
+
     void initWindow() {
         glfwInit();
 
@@ -179,10 +200,10 @@ private:
         glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 
         // hide and capture cursor
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
         // setup mouse callback to process mouse movements
-        glfwSetCursorPosCallback(window, cursorPosCallback);
+        //glfwSetCursorPosCallback(window, cursorPosCallback);
     }
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
@@ -237,7 +258,7 @@ private:
         scene->debug_press_n = false;
         scene->debug_press_b = false;
         scene->debug_press_t = false;
-        scene->debug_mode = false;
+        scene->debug_mode = true;
         scene->lights = light();
         scene->lights.load_file("config/directional_lights.txt");
         fubo.lights = scene->lights;
@@ -257,9 +278,24 @@ private:
         while (!glfwWindowShouldClose(window)) {
             
             // process keyboard input
-            processInput(window);
+            //processInput(window);
 
             glfwPollEvents();
+
+            // Start the Dear ImGui frame
+            ImGui_ImplVulkan_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            // Simple UI
+            ImGui::Begin("Hello, world!");
+            ImGui::Checkbox("Debug mode", &scene->debug_mode);
+            ImGui::End();
+
+            // Rendering
+            ImGui::Render();
+            imgui_draw_data = ImGui::GetDrawData();
+
             drawFrame();
         }
 
@@ -285,6 +321,12 @@ private:
     }
 
     void cleanup() {
+
+        // clean up imgui
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+
         cleanupSwapChain();
 
         vkDestroySampler(gpu.logical_gpu, textureSampler, nullptr);
@@ -727,14 +769,14 @@ private:
 
         // the second type image samplers for texture mapping
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * scene->textures.size());
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * (scene->textures.size() + 1));
 
         // prepare for pool creation
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * (scene->meshes.size() + 1 + scene->textures.size()));
+        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * (scene->meshes.size() + 2 + scene->textures.size()));
 
         // create the pool
         if (vkCreateDescriptorPool(gpu.logical_gpu, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
@@ -1044,6 +1086,9 @@ private:
                 }
             }
         }
+
+        // Record dear imgui primitives into command buffer
+        ImGui_ImplVulkan_RenderDrawData(imgui_draw_data, commandBuffer);
 
         vkCmdEndRenderPass(commandBuffer);
 
