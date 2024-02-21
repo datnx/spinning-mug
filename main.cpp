@@ -251,7 +251,7 @@ private:
 
         scene = new Scene();
         load_meshes_and_textures_obj(
-            scene->meshes, scene->textures, scene->debug_node_names,
+            scene,
             "3d_models/San_Miguel/san-miguel-low-poly.obj",
             "3d_models/San_Miguel/san-miguel-low-poly.mtl"
         );

@@ -45,9 +45,7 @@ glm::vec2 parse_uv(std::string line) {
 }
 
 void serialize(
-	std::vector<Mesh>& meshes,
-	std::vector<Texture>& textures,
-	std::vector<std::string>& debug_nodes,
+	Scene* scene,
 	std::string out_path
 ) {
 
@@ -58,26 +56,26 @@ void serialize(
 	);
 
 	// serialize meshes
-	uint16_t num_meshes = meshes.size();
+	uint16_t num_meshes = scene->meshes.size();
 	file.write(reinterpret_cast<char*>(&num_meshes), sizeof(uint16_t));
 	for (int i = 0; i < num_meshes; i++) {
-		meshes[i].serialize(file);
+		scene->meshes[i].serialize(file);
 	}
 
 	// serialize textures
-	uint16_t num_textures = textures.size();
+	uint16_t num_textures = scene->textures.size();
 	file.write(reinterpret_cast<char*>(&num_textures), sizeof(uint16_t));
 	for (int i = 0; i < num_textures; i++) {
-		textures[i].serialize(file);
+		scene->textures[i].serialize(file);
 	}
 
 	// serialize debug_nodes
-	uint16_t num_debugs = debug_nodes.size();
+	uint16_t num_debugs = scene->debug_node_names.size();
 	file.write(reinterpret_cast<char*>(&num_debugs), sizeof(uint16_t));
 	for (int i = 0; i < num_debugs; i++) {
-		uint16_t str_size = debug_nodes[i].size();
+		uint16_t str_size = scene->debug_node_names[i].size();
 		file.write(reinterpret_cast<char*>(&str_size), sizeof(uint16_t));
-		file.write(debug_nodes[i].c_str(), str_size);
+		file.write(scene->debug_node_names[i].c_str(), str_size);
 	}
 
 	// close the file
@@ -85,9 +83,7 @@ void serialize(
 }
 
 void deserialize(
-	std::vector<Mesh>& meshes,
-	std::vector<Texture>& textures,
-	std::vector<std::string>& debug_nodes,
+	Scene* scene,
 	std::string bin_path
 ) {
 
@@ -100,28 +96,28 @@ void deserialize(
 	// deserialize meshes
 	uint16_t num_meshes;
 	file.read(reinterpret_cast<char*>(&num_meshes), sizeof(uint16_t));
-	meshes.resize(num_meshes);
+	scene->meshes.resize(num_meshes);
 	for (int i = 0; i < num_meshes; i++) {
-		meshes[i].deserialize(file);
+		scene->meshes[i].deserialize(file);
 	}
 
-	// serialize textures
+	// deserialize textures
 	uint16_t num_textures;
 	file.read(reinterpret_cast<char*>(&num_textures), sizeof(uint16_t));
-	textures.resize(num_textures);
+	scene->textures.resize(num_textures);
 	for (int i = 0; i < num_textures; i++) {
-		textures[i].deserialize(file);
+		scene->textures[i].deserialize(file);
 	}
 
 	// deserialize debug_nodes
 	uint16_t num_debugs;
 	file.read(reinterpret_cast<char*>(&num_debugs), sizeof(uint16_t));
-	debug_nodes.resize(num_debugs);
+	scene->debug_node_names.resize(num_debugs);
 	for (int i = 0; i < num_debugs; i++) {
 		uint16_t str_size;
 		file.read(reinterpret_cast<char*>(&str_size), sizeof(uint16_t));
-		debug_nodes[i].resize(str_size);
-		file.read(&debug_nodes[i][0], str_size);
+		scene->debug_node_names[i].resize(str_size);
+		file.read(&scene->debug_node_names[i][0], str_size);
 	}
 
 	// close the file
@@ -129,9 +125,7 @@ void deserialize(
 }
 
 void load_meshes_and_textures_obj(
-	std::vector<Mesh>& meshes,
-	std::vector<Texture>& textures,
-	std::vector<std::string>& debug_nodes,
+	Scene* scene,
 	std::string obj_path,
 	std::string mtl_path
 ) {
@@ -139,7 +133,7 @@ void load_meshes_and_textures_obj(
 	// check for serialized file
 	std::string bin_path = obj_path.substr(0, obj_path.length() - 3) + ".bin";
 	if (std::filesystem::exists(bin_path)) {
-		deserialize(meshes, textures, debug_nodes, bin_path);
+		deserialize(scene, bin_path);
 		return;
 	}
 
@@ -171,7 +165,7 @@ void load_meshes_and_textures_obj(
 			if (!temp.empty()) {
 				faces.push_back(temp);
 				temp.clear();
-				debug_nodes.push_back(object + "_" + material);
+				scene->debug_node_names.push_back(object + "_" + material);
 				materials.push_back(material);
 			}
 			object = line.substr(2);
@@ -180,7 +174,7 @@ void load_meshes_and_textures_obj(
 			if (!temp.empty()) {
 				faces.push_back(temp);
 				temp.clear();
-				debug_nodes.push_back(object + "_" + material);
+				scene->debug_node_names.push_back(object + "_" + material);
 				materials.push_back(material);
 			}
 			material = line.substr(7);
@@ -209,10 +203,10 @@ void load_meshes_and_textures_obj(
 		std::getline(file, line);
 		if (line[0] == 'n') {
 			if (!diffuse_texture_file.empty()) {
-				material_mapping[material_name] = textures.size();
+				material_mapping[material_name] = scene->textures.size();
 				std::filesystem::path correct_texture_path =
 					std::filesystem::path(folder_path).append(diffuse_texture_file);
-				textures.emplace_back(correct_texture_path.string());
+				scene->textures.emplace_back(correct_texture_path.string());
 			}
 			material_name = line.substr(7);
 			diffuse_texture_file.clear();
@@ -240,7 +234,7 @@ void load_meshes_and_textures_obj(
 		mesh.index_offset = index_offset;
 		mesh.vertex_offset = vertex_offset;
 		mesh.texture_index = material_mapping[materials[i]];
-		mesh.debug_node_name = debug_nodes[i];
+		mesh.debug_node_name = scene->debug_node_names[i];
 
 		// load vertices and indices
 		int index = 0;
@@ -274,10 +268,9 @@ void load_meshes_and_textures_obj(
 		index_offset += mesh.indices.size();
 
 		// done loading this mesh
-		meshes.push_back(mesh);
+		scene->meshes.push_back(mesh);
 
 		// serialize the model for faster loading next time
-		
-		serialize(meshes, textures, debug_nodes, bin_path);
+		serialize(scene, bin_path);
 	}
 }

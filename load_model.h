@@ -12,9 +12,7 @@ void print_node_structure(std::string file_path);
 
 // load obj from scratch
 void load_meshes_and_textures_obj(
-	std::vector<Mesh>& meshes,
-	std::vector<Texture>& textures,
-	std::vector<std::string>& debug_nodes,
+	Scene* scene,
 	std::string obj_path,
 	std::string mtl_path
 );
