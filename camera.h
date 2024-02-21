@@ -28,6 +28,8 @@ struct Camera {
 	Camera(glm::vec3 pos, glm::vec3 front, glm::vec3 up);
 	Camera();
 
+	void set_first_mouse();
+
 	// mouse callback
 	void mouse_callback(double xpos, double ypos);
 

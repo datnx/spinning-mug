@@ -1,5 +1,6 @@
 #include <cmath>
 #include <glm/trigonometric.hpp>
+#include <iostream>
 
 #include "camera.h"
 #include "math.h"
@@ -25,6 +26,10 @@ Camera::Camera() {
 	lastY = 300;
 	yaw = -90.0f;
 	pitch = 0.0f;
+	firstMouse = true;
+}
+
+void Camera::set_first_mouse() {
 	firstMouse = true;
 }
 

@@ -283,6 +283,7 @@ private:
             if (!scene->debug_mode) {
                 if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_NORMAL) {
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                    scene->camera.set_first_mouse();
                 }
                 processInput(window);
             } else {
