@@ -261,6 +261,7 @@ private:
         scene->debug_press_b = false;
         scene->debug_press_t = false;
         scene->debug_mode = false;
+        scene->enable_normal_map = true;
         scene->lights = light();
         scene->lights.load_file("config/directional_lights.txt");
         fubo.lights = scene->lights;
@@ -301,8 +302,9 @@ private:
 
             // Simple UI
             if (scene->debug_mode) {
-                ImGui::Begin("Hello, world!");
+                ImGui::Begin("Options");
                 ImGui::Checkbox("Debug mode", &scene->debug_mode);
+                ImGui::Checkbox("Normal map", &scene->enable_normal_map);
                 ImGui::End();
             }
 

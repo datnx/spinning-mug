@@ -78,6 +78,7 @@ public:
 	bool debug_press_b;
 	bool debug_press_t;
 	bool debug_mode;
+	bool enable_normal_map;
 	light lights;
 	Camera camera;
 	Buffer* vertex_buffer;
