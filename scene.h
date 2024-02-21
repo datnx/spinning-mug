@@ -57,6 +57,10 @@ struct Texture {
 	void deserialize(std::ifstream& file);
 };
 
+struct NormalMap {
+	std::string file_path;
+};
+
 struct ViewProjectrion {
 	glm::mat4 view;
 	glm::mat4 proj;
@@ -72,6 +76,7 @@ public:
 	std::vector<Mesh> meshes;
 	std::vector<MeshWithNormalMap> meshes_with_normal_map;
 	std::vector<Texture> textures;
+	std::vector<NormalMap> normal_maps;
 	std::vector<std::string> debug_node_names;
 	int debug_index;
 	bool debug_press_n;
