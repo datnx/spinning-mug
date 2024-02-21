@@ -1088,9 +1088,9 @@ private:
                 if (scene->meshes[j].texture_index == i) {
 
                     // if the mesh is the debug one
-                    if (!scene->debug_mode || scene->meshes[j].debug_node_name == scene->debug_node_names[scene->debug_index]) {
+                    /*if (!scene->debug_mode || scene->meshes[j].debug_node_name == scene->debug_node_names[scene->debug_index]) {
 
-                    } else continue;
+                    } else continue;*/
 
                     // bind the model matrix
                     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphic_pipeline.layout, 2, 1,
