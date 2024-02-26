@@ -198,21 +198,30 @@ void load_meshes_and_textures_obj(
 	// load the textures and normal maps
 	std::unordered_map<std::string, std::pair<int, int>> material_mapping;
 	std::string diffuse_texture_file;
+	std::string normal_map_file;
 	std::string material_name;
 	while (!file.eof()) {
 		std::string line;
 		std::getline(file, line);
-		if (line[0] == 'n') {
+		if (line[0] == 'n' && !material_name.empty()) {
 			if (!diffuse_texture_file.empty()) {
 				material_mapping[material_name].first = scene->textures.size();
 				std::filesystem::path correct_texture_path =
 					std::filesystem::path(folder_path).append(diffuse_texture_file);
 				scene->textures.emplace_back(correct_texture_path.string());
-			}
+			} else material_mapping[material_name].first = -1;
+			if (!normal_map_file.empty()) {
+				material_mapping[material_name].second = scene->normal_maps.size();
+				std::filesystem::path correct_normal_map_path =
+					std::filesystem::path(folder_path).append(normal_map_file);
+				scene->normal_maps.emplace_back(correct_normal_map_path.string());
+			} else material_mapping[material_name].second = -1;
 			material_name = line.substr(7);
 			diffuse_texture_file.clear();
+			normal_map_file.clear();
 		}
 		if (line.substr(0, 6) == "map_Kd") diffuse_texture_file = line.substr(7);
+		if (line.substr(0, 8) == "map_Bump") normal_map_file = line.substr(9);
 	}
 	file.close();
 
@@ -222,9 +231,8 @@ void load_meshes_and_textures_obj(
 	for (int i = 0; i < faces.size(); i++) {
 
 		// skip the meshes without a texture
-		if (material_mapping.find(materials[i]) == material_mapping.end()) {
-			continue;
-		}
+		if (material_mapping.find(materials[i]) == material_mapping.end() ||
+			material_mapping[materials[i]].first == -1) continue;
 
 		// instantiate the mesh
 		Mesh mesh = Mesh();
