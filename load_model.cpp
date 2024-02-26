@@ -132,7 +132,7 @@ void load_meshes_and_textures_obj(
 ) {
 
 	// check for serialized file
-	std::string bin_path = obj_path.substr(0, obj_path.length() - 3) + ".bin";
+	std::string bin_path = obj_path.substr(0, obj_path.length() - 4) + ".bin";
 	if (std::filesystem::exists(bin_path)) {
 		deserialize(scene, bin_path);
 		return;
