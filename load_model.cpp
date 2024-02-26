@@ -250,47 +250,53 @@ void load_meshes_and_textures_obj(
 		if (material_mapping.find(materials[i]) == material_mapping.end() ||
 			material_mapping[materials[i]].first == -1) continue;
 
-		// instantiate the mesh
-		Mesh mesh = Mesh();
-		mesh.init_transform = glm::mat4(1.0f);
-		mesh.index_offset = index_offset;
-		mesh.vertex_offset = vertex_offset;
-		mesh.texture_index = material_mapping[materials[i]].first;
-		mesh.debug_node_name = scene->debug_node_names[i];
+		// if this mesh doesn't have a normal map
+		if (material_mapping[materials[i]].second == -1) {
+			
+			// instantiate the mesh
+			Mesh mesh = Mesh();
+			mesh.init_transform = glm::mat4(1.0f);
+			mesh.index_offset = index_offset;
+			mesh.vertex_offset = vertex_offset;
+			mesh.texture_index = material_mapping[materials[i]].first;
+			mesh.debug_node_name = scene->debug_node_names[i];
 
-		// load vertices and indices
-		int index = 0;
-		std::unordered_map<std::string, int> unique_vertices;
-		for (int j = 0; j < faces[i].size(); j++) {
-			std::vector<std::string> face_vertices = split(faces[i][j], ' ');
-			std::vector<uint32_t> indices;
-			for (int k = 0; k < face_vertices.size(); k++) {
-				if (unique_vertices.find(face_vertices[k]) == unique_vertices.end()) {
-					unique_vertices[face_vertices[k]] = index;
-					indices.push_back(index);
-					std::vector<std::string> pos_uv_nor_indices = split(face_vertices[k], '/');
-					mesh.vertices.emplace_back(
-						coordinates[std::stoi(pos_uv_nor_indices[0]) - 1],
-						normals[std::stoi(pos_uv_nor_indices[2]) - 1],
-						uv[std::stoi(pos_uv_nor_indices[1]) - 1]
-					);
-					index++;
-				} else indices.push_back(unique_vertices[face_vertices[k]]);
+			// load vertices and indices
+			int index = 0;
+			std::unordered_map<std::string, int> unique_vertices;
+			for (int j = 0; j < faces[i].size(); j++) {
+				std::vector<std::string> face_vertices = split(faces[i][j], ' ');
+				std::vector<uint32_t> indices;
+				for (int k = 0; k < face_vertices.size(); k++) {
+					if (unique_vertices.find(face_vertices[k]) == unique_vertices.end()) {
+						unique_vertices[face_vertices[k]] = index;
+						indices.push_back(index);
+						std::vector<std::string> pos_uv_nor_indices = split(face_vertices[k], '/');
+						mesh.vertices.emplace_back(
+							coordinates[std::stoi(pos_uv_nor_indices[0]) - 1],
+							normals[std::stoi(pos_uv_nor_indices[2]) - 1],
+							uv[std::stoi(pos_uv_nor_indices[1]) - 1]
+						);
+						index++;
+					}
+					else indices.push_back(unique_vertices[face_vertices[k]]);
+				}
+				if (indices.size() == 4) {
+					std::vector<uint32_t> triangles = { indices[0], indices[1], indices[2], indices[2], indices[3], indices[0] };
+					mesh.indices.insert(mesh.indices.end(), triangles.begin(), triangles.end());
+				}
+				else if (indices.size() == 3) {
+					mesh.indices.insert(mesh.indices.end(), indices.begin(), indices.end());
+				}
 			}
-			if (indices.size() == 4) {
-				std::vector<uint32_t> triangles = { indices[0], indices[1], indices[2], indices[2], indices[3], indices[0] };
-				mesh.indices.insert(mesh.indices.end(), triangles.begin(), triangles.end());
-			} else if (indices.size() == 3) {
-				mesh.indices.insert(mesh.indices.end(), indices.begin(), indices.end());
-			}
+
+			// update offsets
+			vertex_offset += mesh.vertices.size();
+			index_offset += mesh.indices.size();
+
+			// done loading this mesh
+			scene->meshes.push_back(mesh);
 		}
-
-		// update offsets
-		vertex_offset += mesh.vertices.size();
-		index_offset += mesh.indices.size();
-
-		// done loading this mesh
-		scene->meshes.push_back(mesh);
 
 		// serialize the model for faster loading next time
 		serialize(scene, bin_path);
