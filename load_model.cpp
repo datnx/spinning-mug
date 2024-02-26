@@ -203,22 +203,24 @@ void load_meshes_and_textures_obj(
 	while (!file.eof()) {
 		std::string line;
 		std::getline(file, line);
-		if (line[0] == 'n' && !material_name.empty()) {
-			if (!diffuse_texture_file.empty()) {
-				material_mapping[material_name].first = scene->textures.size();
-				std::filesystem::path correct_texture_path =
-					std::filesystem::path(folder_path).append(diffuse_texture_file);
-				scene->textures.emplace_back(correct_texture_path.string());
-			} else material_mapping[material_name].first = -1;
-			if (!normal_map_file.empty()) {
-				material_mapping[material_name].second = scene->normal_maps.size();
-				std::filesystem::path correct_normal_map_path =
-					std::filesystem::path(folder_path).append(normal_map_file);
-				scene->normal_maps.emplace_back(correct_normal_map_path.string());
-			} else material_mapping[material_name].second = -1;
+		if (line[0] == 'n') {
+			if (!material_name.empty()) {
+				if (!diffuse_texture_file.empty()) {
+					material_mapping[material_name].first = scene->textures.size();
+					std::filesystem::path correct_texture_path =
+						std::filesystem::path(folder_path).append(diffuse_texture_file);
+					scene->textures.emplace_back(correct_texture_path.string());
+				} else material_mapping[material_name].first = -1;
+				if (!normal_map_file.empty()) {
+					material_mapping[material_name].second = scene->normal_maps.size();
+					std::filesystem::path correct_normal_map_path =
+						std::filesystem::path(folder_path).append(normal_map_file);
+					scene->normal_maps.emplace_back(correct_normal_map_path.string());
+				} else material_mapping[material_name].second = -1;
+				diffuse_texture_file.clear();
+				normal_map_file.clear();
+			}
 			material_name = line.substr(7);
-			diffuse_texture_file.clear();
-			normal_map_file.clear();
 		}
 		if (line.substr(0, 6) == "map_Kd") diffuse_texture_file = line.substr(7);
 		if (line.substr(0, 8) == "map_Bump") normal_map_file = line.substr(9);
