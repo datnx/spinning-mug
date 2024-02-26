@@ -225,9 +225,6 @@ void load_meshes_and_textures_obj(
 			continue;
 		}
 
-		// skip if the mesh is not group135
-		//if (debug_nodes[i] != "group135_materials") continue;
-
 		// instantiate the mesh
 		Mesh mesh = Mesh();
 		mesh.init_transform = glm::mat4(1.0f);
