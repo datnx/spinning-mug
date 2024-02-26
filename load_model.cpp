@@ -226,6 +226,20 @@ void load_meshes_and_textures_obj(
 		if (line.substr(0, 8) == "map_Bump") normal_map_file = line.substr(9);
 	}
 	file.close();
+	if (!diffuse_texture_file.empty()) {
+		material_mapping[material_name].first = scene->textures.size();
+		std::filesystem::path correct_texture_path =
+			std::filesystem::path(folder_path).append(diffuse_texture_file);
+		scene->textures.emplace_back(correct_texture_path.string());
+	}
+	else material_mapping[material_name].first = -1;
+	if (!normal_map_file.empty()) {
+		material_mapping[material_name].second = scene->normal_maps.size();
+		std::filesystem::path correct_normal_map_path =
+			std::filesystem::path(folder_path).append(normal_map_file);
+		scene->normal_maps.emplace_back(correct_normal_map_path.string());
+	}
+	else material_mapping[material_name].second = -1;
 
 	// create meshes
 	int vertex_offset = 0;
