@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stack>
 #include <filesystem>
+#include <utility>
 
 #include "math.h"
 #include "load_model.h"
@@ -194,8 +195,8 @@ void load_meshes_and_textures_obj(
 		throw std::runtime_error(fail_message);
 	}
 
-	// load the textures
-	std::unordered_map<std::string, int> material_mapping;
+	// load the textures and normal maps
+	std::unordered_map<std::string, std::pair<int, int>> material_mapping;
 	std::string diffuse_texture_file;
 	std::string material_name;
 	while (!file.eof()) {
@@ -203,7 +204,7 @@ void load_meshes_and_textures_obj(
 		std::getline(file, line);
 		if (line[0] == 'n') {
 			if (!diffuse_texture_file.empty()) {
-				material_mapping[material_name] = scene->textures.size();
+				material_mapping[material_name].first = scene->textures.size();
 				std::filesystem::path correct_texture_path =
 					std::filesystem::path(folder_path).append(diffuse_texture_file);
 				scene->textures.emplace_back(correct_texture_path.string());
@@ -230,7 +231,7 @@ void load_meshes_and_textures_obj(
 		mesh.init_transform = glm::mat4(1.0f);
 		mesh.index_offset = index_offset;
 		mesh.vertex_offset = vertex_offset;
-		mesh.texture_index = material_mapping[materials[i]];
+		mesh.texture_index = material_mapping[materials[i]].first;
 		mesh.debug_node_name = scene->debug_node_names[i];
 
 		// load vertices and indices
