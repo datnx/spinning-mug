@@ -40,6 +40,9 @@ public:
 	std::vector<VertexWithTangent> vertices;
 	int normal_map_index;
 
+	// serialize this mesh to the file
+	void serialize(std::ofstream& file);
+
 	void calculate_tangent_vectors();
 };
 
