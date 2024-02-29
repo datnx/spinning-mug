@@ -94,6 +94,40 @@ void MeshWithNormalMap::serialize(std::ofstream& file) {
 	file.write(debug_node_name.c_str(), str_size);
 }
 
+void MeshWithNormalMap::deserialize(std::ifstream& file) {
+
+	// deserialize vertices
+	uint32_t num_vertices;
+	file.read(reinterpret_cast<char*>(&num_vertices), sizeof(uint32_t));
+	vertices.resize(num_vertices);
+	file.read(
+		reinterpret_cast<char*>(vertices.data()),
+		num_vertices * sizeof(VertexWithTangent)
+	);
+
+	// deserialize indices
+	uint32_t num_indices;
+	file.read(reinterpret_cast<char*>(&num_indices), sizeof(uint32_t));
+	indices.resize(num_indices);
+	file.read(
+		reinterpret_cast<char*>(indices.data()),
+		num_indices * sizeof(uint32_t)
+	);
+
+	// deserialize everything else
+	file.read(reinterpret_cast<char*>(&init_transform), sizeof(glm::mat4));
+	file.read(reinterpret_cast<char*>(&index_offset), sizeof(int));
+	file.read(reinterpret_cast<char*>(&vertex_offset), sizeof(int));
+	file.read(reinterpret_cast<char*>(&texture_index), sizeof(int));
+	file.read(reinterpret_cast<char*>(&normal_map_index), sizeof(int));
+
+	// deserialize debug node name
+	uint16_t str_size;
+	file.read(reinterpret_cast<char*>(&str_size), sizeof(uint16_t));
+	debug_node_name.resize(str_size);
+	file.read(&debug_node_name[0], str_size);
+}
+
 void MeshWithNormalMap::calculate_tangent_vectors() {
 	/*
 	Calculate the tangent vectors based on the math in

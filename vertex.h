@@ -36,6 +36,8 @@ struct VertexWithTangent : public VertexBase {
     */
     glm::vec3 tangent;
 
+    VertexWithTangent();
+
     VertexWithTangent(glm::vec3 p, glm::vec3 n, glm::vec2 uv);
 
     static VkVertexInputBindingDescription getBindingDescription();

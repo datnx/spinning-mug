@@ -42,6 +42,8 @@ std::array<VkVertexInputAttributeDescription, 3> Vertex::getAttributeDescription
     return attributeDescriptions;
 }
 
+VertexWithTangent::VertexWithTangent() {}
+
 VertexWithTangent::VertexWithTangent(glm::vec3 p, glm::vec3 n, glm::vec2 uv) : VertexBase(p, n, uv) {
     tangent = glm::vec3(0.0f, 0.0f, 0.0f);
 }

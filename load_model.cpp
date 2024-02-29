@@ -63,6 +63,13 @@ void serialize(
 		scene->meshes[i].serialize(file);
 	}
 
+	// serialize meshes with normal map
+	uint16_t num_meshes_with_normal_map = scene->meshes_with_normal_map.size();
+	file.write(reinterpret_cast<char*>(&num_meshes_with_normal_map), sizeof(uint16_t));
+	for (int i = 0; i < num_meshes_with_normal_map; i++) {
+		scene->meshes_with_normal_map[i].serialize(file);
+	}
+
 	// serialize textures
 	uint16_t num_textures = scene->textures.size();
 	file.write(reinterpret_cast<char*>(&num_textures), sizeof(uint16_t));
@@ -100,6 +107,14 @@ void deserialize(
 	scene->meshes.resize(num_meshes);
 	for (int i = 0; i < num_meshes; i++) {
 		scene->meshes[i].deserialize(file);
+	}
+
+	// deserialize meshes with normal map
+	uint16_t num_meshes_with_normal_map;
+	file.read(reinterpret_cast<char*>(&num_meshes_with_normal_map), sizeof(uint16_t));
+	scene->meshes_with_normal_map.resize(num_meshes_with_normal_map);
+	for (int i = 0; i < num_meshes_with_normal_map; i++) {
+		scene->meshes_with_normal_map[i].deserialize(file);
 	}
 
 	// deserialize textures
