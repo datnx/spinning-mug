@@ -1152,11 +1152,17 @@ private:
         size_t view_projection_size = gpu.getAlignSize(sizeof(ViewProjectrion));
         size_t fragment_size = gpu.getAlignSize(sizeof(FragmentUniform));
         size_t model_size = gpu.getAlignSize(sizeof(glm::mat4));
-        size_t uniform_size = view_projection_size + fragment_size + model_size * scene->meshes.size();
+        size_t uniform_size = view_projection_size + fragment_size +
+            model_size * (scene->meshes.size() + scene->meshes_with_normal_map.size());
 
-        for (int i = 0; i < scene->meshes.size(); i++) {
-            memcpy(p + currentFrame * uniform_size + view_projection_size + fragment_size + i * model_size, &scene->meshes[i].init_transform, sizeof(glm::mat4));
-        }
+        // update model transforms
+        for (int i = 0; i < scene->meshes.size(); i++)
+            memcpy(p + currentFrame * uniform_size + view_projection_size + fragment_size +
+                i * model_size, &scene->meshes[i].init_transform, sizeof(glm::mat4));
+        for (int i = 0; i < scene->meshes_with_normal_map.size(); i++)
+            memcpy(p + currentFrame * uniform_size + view_projection_size + fragment_size +
+                scene->meshes.size() * model_size + i * model_size,
+                &scene->meshes_with_normal_map[i].init_transform, sizeof(glm::mat4));
         
         fubo.eye = scene->camera.cameraPos;
         memcpy(p + currentFrame * uniform_size + view_projection_size, &fubo, sizeof(FragmentUniform));
