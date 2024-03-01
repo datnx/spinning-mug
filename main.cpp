@@ -778,7 +778,8 @@ private:
         // the first type is uniform buffer
         // (model matrix, view matrix, projection matrix, eye location, and light)
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * (scene->meshes.size() + 2));
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT *
+            (scene->meshes.size() + scene->meshes_with_normal_map.size() + 2));
 
         // the second type image samplers for texture mapping
         // TODO: maybe we only need as many descriptors and descriptor set as the number of textures.
@@ -791,7 +792,8 @@ private:
         poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * (scene->meshes.size() + 1 + scene->textures.size()) + 1);
+        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * (scene->meshes.size() +
+            scene->meshes_with_normal_map.size() + 1 + scene->textures.size()) + 1);
 
         // create the pool
         if (vkCreateDescriptorPool(gpu.logical_gpu, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
