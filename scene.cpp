@@ -280,7 +280,8 @@ void Scene::createUniformBuffer(GPU* gpu) {
     VkDeviceSize bufferSize = (
         gpu->getAlignSize(sizeof(ViewProjectrion)) +
         gpu->getAlignSize(sizeof(FragmentUniform)) +
-        meshes.size() * gpu->getAlignSize(sizeof(glm::mat4))
+        (meshes.size() + meshes_with_normal_map.size()) *
+		gpu->getAlignSize(sizeof(glm::mat4))
     ) * MAX_FRAMES_IN_FLIGHT;
 
     uniform_buffer = new Buffer(gpu, bufferSize,
