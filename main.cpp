@@ -99,7 +99,7 @@ private:
 
     VkDescriptorSetLayout descriptorSetLayout_0, descriptorSetLayout_1, descriptorSetLayout_2;
     
-    Pipeline graphic_pipeline;
+    Pipeline basic_graphic_pipeline;
 
     Scene* scene;
 
@@ -235,7 +235,7 @@ private:
 
         std::vector<VkDescriptorSetLayout> setLayouts =
             {descriptorSetLayout_0, descriptorSetLayout_1, descriptorSetLayout_2};
-        graphic_pipeline.create(&gpu, msaa, renderPass->getRenderPass(), setLayouts);
+        basic_graphic_pipeline.create(&gpu, msaa, renderPass->getRenderPass(), setLayouts);
         
         msaa->createColorResources(swapChainImageFormat, swapChainExtent);
         createDepthResources();
@@ -363,8 +363,8 @@ private:
         vkDestroyDescriptorSetLayout(gpu.logical_gpu, descriptorSetLayout_1, nullptr);
         vkDestroyDescriptorSetLayout(gpu.logical_gpu, descriptorSetLayout_2, nullptr);
 
-        vkDestroyPipeline(gpu.logical_gpu, graphic_pipeline.pipeline, nullptr);
-        vkDestroyPipelineLayout(gpu.logical_gpu, graphic_pipeline.layout, nullptr);
+        vkDestroyPipeline(gpu.logical_gpu, basic_graphic_pipeline.pipeline, nullptr);
+        vkDestroyPipelineLayout(gpu.logical_gpu, basic_graphic_pipeline.layout, nullptr);
 
         delete renderPass;
 
@@ -1135,7 +1135,7 @@ private:
         // Bind view matrix, projection matrix, lights, eye position
         vkCmdBindDescriptorSets(
             commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-            graphic_pipeline.layout, 0, 1,
+            basic_graphic_pipeline.layout, 0, 1,
             &descriptorSets[descriptor_set_index], 0, nullptr
         );
         descriptor_set_index++;
@@ -1146,12 +1146,12 @@ private:
             // bind the texture
             vkCmdBindDescriptorSets(
                 commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                graphic_pipeline.layout, 1, 1,
+                basic_graphic_pipeline.layout, 1, 1,
                 &descriptorSets[descriptor_set_index + i], 0, nullptr
             );
 
             // bind the pipeline to render basic meshes first
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphic_pipeline.pipeline);
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, basic_graphic_pipeline.pipeline);
 
             // for each mesh
             for (int j = 0; j < scene->meshes.size(); j++) {
@@ -1162,7 +1162,7 @@ private:
                     // bind the model matrix
                     vkCmdBindDescriptorSets(
                         commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        graphic_pipeline.layout, 2, 1,
+                        basic_graphic_pipeline.layout, 2, 1,
                         &descriptorSets[descriptor_set_index + scene->textures.size() + j],
                         0, nullptr
                     );
