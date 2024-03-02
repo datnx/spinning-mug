@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
-#include <array>
+#include <vector>
 
 struct VertexBase {
     /*
@@ -27,7 +27,7 @@ struct Vertex : public VertexBase {
 
     static VkVertexInputBindingDescription getBindingDescription();
 
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
+    static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 };
 
 struct VertexWithTangent : public VertexBase {
@@ -42,5 +42,5 @@ struct VertexWithTangent : public VertexBase {
 
     static VkVertexInputBindingDescription getBindingDescription();
 
-    static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions();
+    static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 };
