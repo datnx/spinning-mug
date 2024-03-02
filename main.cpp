@@ -927,6 +927,7 @@ private:
                 );
                 buffer_info_offset += gpu.getAlignSize(sizeof(glm::mat4));
             }
+            descriptor_write_index += scene->meshes.size();
             buffer_info_index += scene->meshes.size();
             descriptor_set_index += scene->meshes.size();
 
