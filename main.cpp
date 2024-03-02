@@ -1110,8 +1110,6 @@ private:
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphic_pipeline.pipeline);
-
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -1131,16 +1129,29 @@ private:
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, scene->index_buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
 
+        int descriptor_set_index = currentFrame * (1 + scene->textures.size() +
+            scene->meshes.size() + scene->meshes_with_normal_map.size());
+
         // Bind view matrix, projection matrix, lights, eye position
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphic_pipeline.layout, 0, 1,
-            &descriptorSets[currentFrame * (1 + scene->textures.size() + scene->meshes.size())], 0, nullptr);
+        vkCmdBindDescriptorSets(
+            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            graphic_pipeline.layout, 0, 1,
+            &descriptorSets[descriptor_set_index], 0, nullptr
+        );
+        descriptor_set_index++;
 
         // for each texture
         for (int i = 0; i < scene->textures.size(); i++) {
 
             // bind the texture
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphic_pipeline.layout, 1, 1,
-                &descriptorSets[currentFrame * (1 + scene->textures.size() + scene->meshes.size()) + 1 + i], 0, nullptr);
+            vkCmdBindDescriptorSets(
+                commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                graphic_pipeline.layout, 1, 1,
+                &descriptorSets[descriptor_set_index + i], 0, nullptr
+            );
+
+            // bind the pipeline to render basic meshes first
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphic_pipeline.pipeline);
 
             // for each mesh
             for (int j = 0; j < scene->meshes.size(); j++) {
@@ -1149,8 +1160,12 @@ private:
                 if (scene->meshes[j].texture_index == i) {
 
                     // bind the model matrix
-                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphic_pipeline.layout, 2, 1,
-                        &descriptorSets[currentFrame * (1 + scene->textures.size() + scene->meshes.size()) + 1 + scene->textures.size() + j], 0, nullptr);
+                    vkCmdBindDescriptorSets(
+                        commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        graphic_pipeline.layout, 2, 1,
+                        &descriptorSets[descriptor_set_index + scene->textures.size() + j],
+                        0, nullptr
+                    );
 
                     // draw call
                     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(scene->meshes[j].indices.size()),
