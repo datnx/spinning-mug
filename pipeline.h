@@ -13,8 +13,12 @@ public:
 	VkPipelineLayout layout;
 
 	Pipeline();
-	void create(GPU* gpu, MSAA* msaa, VkRenderPass render_pass,
-		std::vector<VkDescriptorSetLayout>& setLayouts);
+	void create(
+		GPU* gpu, MSAA* msaa, VkRenderPass render_pass,
+		VkVertexInputBindingDescription bindingDescription,
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions,
+		std::vector<VkDescriptorSetLayout>& setLayouts
+	);
 };
 
 std::vector<char> readFile(const std::string& filename);

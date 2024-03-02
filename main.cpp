@@ -19,6 +19,7 @@
 #include <limits>
 #include <optional>
 #include <set>
+#include <array>
 
 #include "gpu.h"
 #include "transform.h"
@@ -235,7 +236,14 @@ private:
 
         std::vector<VkDescriptorSetLayout> setLayouts =
             {descriptorSetLayout_0, descriptorSetLayout_1, descriptorSetLayout_2};
-        basic_graphic_pipeline.create(&gpu, msaa, renderPass->getRenderPass(), setLayouts);
+        
+        // create the basic pipeline to render basic meshes
+        basic_graphic_pipeline.create(
+            &gpu, msaa, renderPass->getRenderPass(),
+            Vertex::getBindingDescription(),
+            Vertex::getAttributeDescriptions(),
+            setLayouts
+        );
         
         msaa->createColorResources(swapChainImageFormat, swapChainExtent);
         createDepthResources();

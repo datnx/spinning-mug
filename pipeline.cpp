@@ -9,9 +9,12 @@ Pipeline::Pipeline() {
 	layout = VK_NULL_HANDLE;
 }
 
-void Pipeline::create(GPU* gpu, MSAA* msaa, VkRenderPass render_pass,
-    std::vector<VkDescriptorSetLayout>& setLayouts)
-{
+void Pipeline::create(
+    GPU* gpu, MSAA* msaa, VkRenderPass render_pass,
+    VkVertexInputBindingDescription bindingDescription,
+    std::vector<VkVertexInputAttributeDescription> attributeDescriptions,
+    std::vector<VkDescriptorSetLayout>& setLayouts
+) {
     auto vertShaderCode = readFile("shaders/vert.spv");
     auto fragShaderCode = readFile("shaders/frag.spv");
 
@@ -34,9 +37,6 @@ void Pipeline::create(GPU* gpu, MSAA* msaa, VkRenderPass render_pass,
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
 
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
