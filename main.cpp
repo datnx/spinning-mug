@@ -100,7 +100,7 @@ private:
 
     VkDescriptorSetLayout descriptorSetLayout_0, descriptorSetLayout_1, descriptorSetLayout_2;
     
-    Pipeline basic_graphic_pipeline;
+    Pipeline basic_graphic_pipeline, basic_t_graphic_pipeline;
 
     Scene* scene;
 
@@ -244,6 +244,15 @@ private:
             Vertex::getAttributeDescriptions(),
             setLayouts
         );
+
+        // create a graphic pipeline that takes vertex with tangent
+        // and render it without normal mapping
+        basic_t_graphic_pipeline.create(
+            &gpu, msaa, renderPass->getRenderPass(),
+            VertexWithTangent::getBindingDescription(),
+            VertexWithTangent::getAttributeDescriptions(),
+            setLayouts
+        );
         
         msaa->createColorResources(swapChainImageFormat, swapChainExtent);
         createDepthResources();
@@ -266,7 +275,7 @@ private:
         scene->debug_press_b = false;
         scene->debug_press_t = false;
         scene->debug_mode = false;
-        scene->enable_normal_map = true;
+        scene->enable_normal_map = false;
         scene->lights = light();
         scene->lights.load_file("config/directional_lights.txt");
         fubo.lights = scene->lights;
@@ -1133,8 +1142,6 @@ private:
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
         VkBuffer vertexBuffers[] = {scene->vertex_buffer->buffer};
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, scene->index_buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
 
         int descriptor_set_index = currentFrame * (1 + scene->textures.size() +
@@ -1160,6 +1167,10 @@ private:
 
             // bind the pipeline to render basic meshes first
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, basic_graphic_pipeline.pipeline);
+            
+            // bind the vertex buffer
+            VkDeviceSize offsets[] = {0};
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
             // for each mesh
             for (int j = 0; j < scene->meshes.size(); j++) {
@@ -1178,6 +1189,44 @@ private:
                     // draw call
                     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(scene->meshes[j].indices.size()),
                         1, scene->meshes[j].index_offset, scene->meshes[j].vertex_offset, 0);
+                }
+            }
+
+            // if normal mapping is disabled, draw meshes with normal map
+            // the same way as meshes
+            if (!scene->enable_normal_map && false) {
+
+                // bind the pipeline that render the meshes_with_normal_map
+                // without normal mapping
+                vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    basic_t_graphic_pipeline.pipeline);
+
+                // bind the vertex buffer
+                VkDeviceSize offsets[] = {sizeof(Vertex) * scene->get_num_vertices()};
+                vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+                // for each mesh
+                for (int j = 0; j < scene->meshes_with_normal_map.size(); j++) {
+
+                    // if the mesh use the ith texture
+                    if (scene->meshes_with_normal_map[j].texture_index == i) {
+
+                        // bind the model matrix
+                        vkCmdBindDescriptorSets(
+                            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            basic_t_graphic_pipeline.layout, 2, 1,
+                            &descriptorSets[descriptor_set_index + scene->textures.size() + scene->meshes.size() + j],
+                            0, nullptr
+                        );
+
+                        // draw call
+                        vkCmdDrawIndexed(
+                            commandBuffer,
+                            static_cast<uint32_t>(scene->meshes_with_normal_map[j].indices.size()),
+                            1, scene->meshes_with_normal_map[j].index_offset,
+                            scene->meshes_with_normal_map[j].vertex_offset, 0
+                        );
+                    }
                 }
             }
         }
