@@ -382,6 +382,8 @@ private:
 
         vkDestroyPipeline(gpu.logical_gpu, basic_graphic_pipeline.pipeline, nullptr);
         vkDestroyPipelineLayout(gpu.logical_gpu, basic_graphic_pipeline.layout, nullptr);
+        vkDestroyPipeline(gpu.logical_gpu, basic_t_graphic_pipeline.pipeline, nullptr);
+        vkDestroyPipelineLayout(gpu.logical_gpu, basic_t_graphic_pipeline.layout, nullptr);
 
         delete renderPass;
 
