@@ -15,6 +15,7 @@ public:
 	Pipeline();
 	void create(
 		GPU* gpu, MSAA* msaa, VkRenderPass render_pass,
+		std::string vertex_shader, std::string fragment_shader,
 		VkVertexInputBindingDescription bindingDescription,
 		std::vector<VkVertexInputAttributeDescription> attributeDescriptions,
 		std::vector<VkDescriptorSetLayout>& setLayouts

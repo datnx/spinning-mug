@@ -11,12 +11,13 @@ Pipeline::Pipeline() {
 
 void Pipeline::create(
     GPU* gpu, MSAA* msaa, VkRenderPass render_pass,
+    std::string vertex_shader, std::string fragment_shader,
     VkVertexInputBindingDescription bindingDescription,
     std::vector<VkVertexInputAttributeDescription> attributeDescriptions,
     std::vector<VkDescriptorSetLayout>& setLayouts
 ) {
-    auto vertShaderCode = readFile("shaders/vert.spv");
-    auto fragShaderCode = readFile("shaders/frag.spv");
+    auto vertShaderCode = readFile(vertex_shader);
+    auto fragShaderCode = readFile(fragment_shader);
 
     VkShaderModule vertShaderModule = gpu->createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = gpu->createShaderModule(fragShaderCode);

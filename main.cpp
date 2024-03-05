@@ -240,6 +240,7 @@ private:
         // create the basic pipeline to render basic meshes
         basic_graphic_pipeline.create(
             &gpu, msaa, renderPass->getRenderPass(),
+            "shaders/vert.spv", "shaders/frag.spv",
             Vertex::getBindingDescription(),
             Vertex::getAttributeDescriptions(),
             setLayouts
@@ -249,6 +250,7 @@ private:
         // and render it without normal mapping
         basic_t_graphic_pipeline.create(
             &gpu, msaa, renderPass->getRenderPass(),
+            "shaders/vert_t.spv", "shaders/frag.spv",
             VertexWithTangent::getBindingDescription(),
             VertexWithTangent::getAttributeDescriptions(),
             setLayouts
@@ -1143,7 +1145,9 @@ private:
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        VkBuffer vertexBuffers[] = {scene->vertex_buffer->buffer};
+        VkBuffer vertexBuffers[2] = {scene->vertex_buffer->buffer, scene->vertex_buffer->buffer};
+        VkDeviceSize offsets[2] = {0, sizeof(Vertex) * scene->get_num_vertices()};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 2, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, scene->index_buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
 
         int descriptor_set_index = currentFrame * (1 + scene->textures.size() +
@@ -1169,10 +1173,6 @@ private:
 
             // bind the pipeline to render basic meshes first
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, basic_graphic_pipeline.pipeline);
-            
-            // bind the vertex buffer
-            VkDeviceSize offsets[] = {0};
-            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
             // for each mesh
             for (int j = 0; j < scene->meshes.size(); j++) {
@@ -1202,10 +1202,6 @@ private:
                 // without normal mapping
                 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                     basic_t_graphic_pipeline.pipeline);
-
-                // bind the vertex buffer
-                VkDeviceSize offsets[] = {sizeof(Vertex) * scene->get_num_vertices()};
-                vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
                 // for each mesh
                 for (int j = 0; j < scene->meshes_with_normal_map.size(); j++) {
