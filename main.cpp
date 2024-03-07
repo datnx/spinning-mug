@@ -1196,7 +1196,7 @@ private:
 
             // if normal mapping is disabled, draw meshes with normal map
             // the same way as meshes
-            if (!scene->enable_normal_map && false) {
+            if (!scene->enable_normal_map) {
 
                 // bind the pipeline that render the meshes_with_normal_map
                 // without normal mapping
