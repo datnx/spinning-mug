@@ -339,6 +339,9 @@ void load_meshes_and_textures_obj(
 				}
 			}
 
+			// calculate tangents
+			mesh.calculate_tangent_vectors();
+
 			// done loading this mesh
 			scene->meshes_with_normal_map.push_back(mesh);
 		}
