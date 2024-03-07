@@ -263,7 +263,7 @@ void Scene::createIndexBuffer(GPU* gpu) {
         offset += indices_size;
     }
 	for (int i = 0; i < meshes_with_normal_map.size(); i++) {
-		size_t indices_size = sizeof(uint16_t) * meshes_with_normal_map[i].indices.size();
+		size_t indices_size = sizeof(uint32_t) * meshes_with_normal_map[i].indices.size();
 		memcpy((char*)data + offset, meshes_with_normal_map[i].indices.data(), indices_size);
 		offset += indices_size;
 	}
