@@ -257,10 +257,6 @@ void load_meshes_and_textures_obj(
 	else material_mapping[material_name].second = -1;
 
 	// create meshes
-	int vertex_offset = 0;
-	int index_offset = 0;
-	int n_vertex_offset = 0;
-	int n_index_offset = 0;
 	for (int i = 0; i < faces.size(); i++) {
 
 		// skip the meshes without a texture
@@ -273,8 +269,6 @@ void load_meshes_and_textures_obj(
 			// instantiate the mesh
 			Mesh mesh = Mesh();
 			mesh.init_transform = glm::mat4(1.0f);
-			mesh.index_offset = index_offset;
-			mesh.vertex_offset = vertex_offset;
 			mesh.texture_index = material_mapping[materials[i]].first;
 			mesh.debug_node_name = scene->debug_node_names[i];
 
@@ -307,10 +301,6 @@ void load_meshes_and_textures_obj(
 				}
 			}
 
-			// update offsets
-			vertex_offset += mesh.vertices.size();
-			index_offset += mesh.indices.size();
-
 			// done loading this mesh
 			scene->meshes.push_back(mesh);
 		} else {
@@ -318,8 +308,6 @@ void load_meshes_and_textures_obj(
 			// instantiate the mesh
 			MeshWithNormalMap mesh = MeshWithNormalMap();
 			mesh.init_transform = glm::mat4(1.0f);
-			mesh.index_offset = n_index_offset;
-			mesh.vertex_offset = n_vertex_offset;
 			mesh.texture_index = material_mapping[materials[i]].first;
 			mesh.normal_map_index = material_mapping[materials[i]].second;
 			mesh.debug_node_name = scene->debug_node_names[i];
@@ -351,12 +339,25 @@ void load_meshes_and_textures_obj(
 				}
 			}
 
-			// update offsets
-			n_vertex_offset += mesh.vertices.size();
-			n_index_offset += mesh.indices.size();
-
 			// done loading this mesh
 			scene->meshes_with_normal_map.push_back(mesh);
+		}
+
+		// update offsets
+		int vertex_offset = 0;
+		int index_offset = 0;
+		for (int i = 0; i < scene->meshes.size(); i++) {
+			scene->meshes[i].vertex_offset = vertex_offset;
+			scene->meshes[i].index_offset = index_offset;
+			vertex_offset += scene->meshes[i].vertices.size();
+			index_offset += scene->meshes[i].indices.size();
+		}
+		vertex_offset = 0;
+		for (int i = 0; i < scene->meshes_with_normal_map.size(); i++) {
+			scene->meshes_with_normal_map[i].vertex_offset = vertex_offset;
+			scene->meshes_with_normal_map[i].index_offset = index_offset;
+			vertex_offset += scene->meshes_with_normal_map[i].vertices.size();
+			index_offset += scene->meshes_with_normal_map[i].indices.size();
 		}
 
 		// serialize the model for faster loading next time
