@@ -109,6 +109,9 @@ private:
     VkDeviceMemory textureImageMemory;
     VkSampler textureSampler;
 
+    std::vector<VkImage> normalMapImage;
+    VkDeviceMemory normalMapImageMemory;
+
     FragmentUniform fubo;
 
     VkImage depthImage;
@@ -285,6 +288,9 @@ private:
         // create VkImage and VkImageView for textures
         createTextureImages();
         createTextureImageViews();
+
+        // create VkImage and VkImageView for normal maps
+        createNormalMapImages();
 
         scene->createVertexBuffer(&gpu);
         scene->createIndexBuffer(&gpu);
@@ -532,6 +538,120 @@ private:
         textureImageView.resize(scene->textures.size());
         for (int i = 0; i < scene->textures.size(); i++) {
             textureImageView[i] = imageCreator->createImageView(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+        }
+    }
+
+    void createNormalMapImages() {
+        /*
+        Load images from files and create normal map images
+        */
+
+        // image size
+        VkDeviceSize totalImageSize = 0;
+        std::vector<VkDeviceSize> imageSize;
+        imageSize.resize(scene->normal_maps.size());
+        std::vector<int> texWidth;
+        texWidth.resize(scene->normal_maps.size());
+        std::vector<int> texHeight;
+        texHeight.resize(scene->normal_maps.size());
+
+        // image data
+        std::vector<stbi_uc*> pixels;
+        pixels.resize(scene->normal_maps.size());
+
+        // load images from files
+        for (int i = 0; i < scene->normal_maps.size(); i++) {
+
+            // load the image using stb library
+            int texChannels;
+            pixels[i] = stbi_load(scene->normal_maps[i].file_path.c_str(),
+                &texWidth[i], &texHeight[i], &texChannels, STBI_rgb_alpha);
+            if (!pixels[i]) throw std::runtime_error("failed to load texture image!");
+
+            // calculate image size
+            imageSize[i] = texWidth[i] * texHeight[i] * 4;
+            totalImageSize += imageSize[i];
+
+        }
+
+        // create staging buffer
+        Buffer staging_buffer(&gpu, totalImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        // map the staging buffer memory on the GPU to a memory block on the RAM
+        void* data;
+        vkMapMemory(gpu.logical_gpu, staging_buffer.memory, 0, totalImageSize, 0, &data);
+
+        // copy the image data to the mapped memory
+        int offset = 0;
+        for (int i = 0; i < scene->normal_maps.size(); i++) {
+
+            // flip the memory layout vertically so that it can map correctly
+            for (int j = 0; j < texHeight[i]; j++) {
+                memcpy((char*)data + offset + j * texWidth[i] * 4, pixels[i] + (texHeight[i] - 1 - j) * texWidth[i] * 4, texWidth[i] * 4);
+            }
+
+            // free the loaded image data
+            stbi_image_free(pixels[i]);
+
+            // update the offset
+            offset += imageSize[i];
+        }
+
+        // After copy is complete, unmap the GPU memory
+        vkUnmapMemory(gpu.logical_gpu, staging_buffer.memory);
+
+        // create the VkImages and get memory requirements
+        normalMapImage.resize(scene->normal_maps.size());
+        std::vector<VkMemoryRequirements> memRequirements;
+        memRequirements.resize(scene->normal_maps.size());
+        VkDeviceSize totalRequiredSize = 0;
+        uint32_t typeFilter = UINT32_MAX;
+        for (int i = 0; i < scene->normal_maps.size(); i++) {
+            imageCreator->createImage(
+                static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]),
+                VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB,
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                normalMapImage[i]
+            );
+            vkGetImageMemoryRequirements(gpu.logical_gpu, normalMapImage[i], &memRequirements[i]);
+            totalRequiredSize += memRequirements[i].size;
+            typeFilter &= memRequirements[i].memoryTypeBits;
+        }
+
+        // allocate memory
+        gpu.allocateMemory(totalRequiredSize,
+            gpu.findMemoryType(typeFilter, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+            normalMapImageMemory
+        );
+
+        // bind the VkImage to the memory and copy data from the staging buffer to the VkImage
+        VkDeviceSize imageOffset = 0;
+        VkDeviceSize bufferOffset = 0;
+        for (int i = 0; i < scene->normal_maps.size(); i++) {
+
+            // bind the VkImage
+            vkBindImageMemory(gpu.logical_gpu, normalMapImage[i], normalMapImageMemory, imageOffset);
+
+            // copy data
+            transitionImageLayout(
+                normalMapImage[i],
+                VK_FORMAT_R8G8B8A8_SRGB,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+            );
+            copyBufferToImage(staging_buffer.buffer, bufferOffset, normalMapImage[i],
+                static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]));
+            transitionImageLayout(
+                normalMapImage[i],
+                VK_FORMAT_R8G8B8A8_SRGB,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+
+            // update the offset
+            imageOffset += memRequirements[i].size;
+            bufferOffset += imageSize[i];
         }
     }
 
