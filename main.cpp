@@ -110,6 +110,7 @@ private:
     VkSampler textureSampler;
 
     std::vector<VkImage> normalMapImage;
+    std::vector<VkImageView> normalMapImageView;
     VkDeviceMemory normalMapImageMemory;
 
     FragmentUniform fubo;
@@ -291,6 +292,7 @@ private:
 
         // create VkImage and VkImageView for normal maps
         createNormalMapImages();
+        createNormalMapImageViews();
 
         scene->createVertexBuffer(&gpu);
         scene->createIndexBuffer(&gpu);
@@ -374,8 +376,13 @@ private:
             vkDestroyImageView(gpu.logical_gpu, textureImageView[i], nullptr);
             vkDestroyImage(gpu.logical_gpu, textureImage[i], nullptr);
         }
+        for (int i = 0; i < scene->normal_maps.size(); i++) {
+            vkDestroyImageView(gpu.logical_gpu, normalMapImageView[i], nullptr);
+            vkDestroyImage(gpu.logical_gpu, normalMapImage[i], nullptr);
+        }
         
         vkFreeMemory(gpu.logical_gpu, textureImageMemory, nullptr);
+        vkFreeMemory(gpu.logical_gpu, normalMapImageMemory, nullptr);
 
         delete msaa;
         delete imageCreator;
@@ -652,6 +659,14 @@ private:
             // update the offset
             imageOffset += memRequirements[i].size;
             bufferOffset += imageSize[i];
+        }
+    }
+
+    void createNormalMapImageViews() {
+        normalMapImageView.resize(scene->normal_maps.size());
+        for (int i = 0; i < scene->normal_maps.size(); i++) {
+            normalMapImageView[i] = imageCreator->createImageView(
+                normalMapImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
         }
     }
 
