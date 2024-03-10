@@ -977,6 +977,10 @@ private:
             for (int j = 0; j < scene->textures.size(); j++)
                 layouts.push_back(descriptorSetLayout_1);
 
+            // these sets are for normal maps
+            for (int j = 0; j < scene->normal_maps.size(); j++)
+                layouts.push_back(descriptorSetLayout_1);
+
             // these sets are for model matrices
             for (int j = 0; j < scene->meshes.size(); j++)
                 layouts.push_back(descriptorSetLayout_2);
@@ -999,13 +1003,13 @@ private:
 
         // write to the descriptors
         std::vector<VkWriteDescriptorSet> descriptorWrites;
-        descriptorWrites.resize((2 + scene->textures.size() + scene->meshes.size() +
-            scene->meshes_with_normal_map.size()) * MAX_FRAMES_IN_FLIGHT);
+        descriptorWrites.resize((2 + scene->textures.size() + scene->normal_maps.size() +
+            scene->meshes.size() + scene->meshes_with_normal_map.size()) * MAX_FRAMES_IN_FLIGHT);
         std::vector<VkDescriptorBufferInfo> bufferInfos;
         bufferInfos.resize((2 + scene->meshes.size() +
             scene->meshes_with_normal_map.size()) * MAX_FRAMES_IN_FLIGHT);
         std::vector<VkDescriptorImageInfo> imageInfos;
-        imageInfos.resize(scene->textures.size() * MAX_FRAMES_IN_FLIGHT);
+        imageInfos.resize((scene->textures.size() + scene->normal_maps.size()) * MAX_FRAMES_IN_FLIGHT);
 
         // for each frame, update the buffer info or the image info and the descriptor write of all descriptors
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -1019,6 +1023,7 @@ private:
             );
             int buffer_info_index = i * (2 + scene->meshes.size() +
                 scene->meshes_with_normal_map.size());
+            int image_info_index = i * (scene->textures.size() + scene->normal_maps.size());
             int descriptor_write_index = i * (2 + scene->textures.size() +
                 scene->meshes.size() + scene->meshes_with_normal_map.size());
             int descriptor_set_index = i * (1 + scene->textures.size() +
@@ -1057,15 +1062,29 @@ private:
             descriptor_write_index++;
             descriptor_set_index++;
             for (int j = 0; j < scene->textures.size(); j++) {
-                updateImageInfo(imageInfos[i * scene->textures.size() + j], textureImageView[j], textureSampler);
+                updateImageInfo(imageInfos[image_info_index + j], textureImageView[j], textureSampler);
                 updateDescriptorWrite(
                     descriptorWrites[descriptor_write_index + j],
                     descriptorSets[descriptor_set_index + j], 0,
                     VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                    nullptr, &imageInfos[i * scene->textures.size() + j]);
+                    nullptr, &imageInfos[image_info_index + j]);
             }
             descriptor_write_index += scene->textures.size();
             descriptor_set_index += scene->textures.size();
+            image_info_index += scene->textures.size();
+
+            // normal maps
+            for (int j = 0; j < scene->normal_maps.size(); j++) {
+                updateImageInfo(imageInfos[image_info_index + j], normalMapImageView[j], textureSampler);
+                updateDescriptorWrite(
+                    descriptorWrites[descriptor_write_index + j],
+                    descriptorSets[descriptor_set_index + j], 0,
+                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                    nullptr, &imageInfos[image_info_index + j]
+                );
+            }
+            descriptor_write_index += scene->normal_maps.size();
+            descriptor_set_index += scene->normal_maps.size();
 
             // meshes
             buffer_info_offset += gpu.getAlignSize(sizeof(FragmentUniform));
