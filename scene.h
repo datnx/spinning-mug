@@ -65,6 +65,12 @@ struct Texture {
 
 struct NormalMap {
 	std::string file_path;
+
+	// serialize this normal map to the file
+	void serialize(std::ofstream& file);
+
+	// deserialize this normal map from the file
+	void deserialize(std::ifstream& file);
 };
 
 struct ViewProjectrion {

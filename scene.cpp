@@ -186,6 +186,19 @@ void Texture::deserialize(std::ifstream& file) {
 	file.read(&file_path[0], str_size);
 }
 
+void NormalMap::serialize(std::ofstream& file) {
+	uint16_t str_size = file_path.size();
+	file.write(reinterpret_cast<char*>(&str_size), sizeof(uint16_t));
+	file.write(file_path.c_str(), str_size);
+}
+
+void NormalMap::deserialize(std::ifstream& file) {
+	uint16_t str_size;
+	file.read(reinterpret_cast<char*>(&str_size), sizeof(uint16_t));
+	file_path.resize(str_size);
+	file.read(&file_path[0], str_size);
+}
+
 Scene::~Scene() {
     delete vertex_buffer;
     delete index_buffer;
