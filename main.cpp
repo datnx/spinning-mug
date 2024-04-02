@@ -292,7 +292,6 @@ private:
 
         // create VkImage and VkImageView for normal maps
         createNormalMapImages();
-        createNormalMapImageViews();
 
         scene->createVertexBuffer(&gpu);
         scene->createIndexBuffer(&gpu);
@@ -552,6 +551,16 @@ private:
         Load images from files and create normal map images
         */
 
+        // select the format of the images
+        VkFormat format = findSupportedFormat(
+            { VK_FORMAT_R8G8B8_SRGB, VK_FORMAT_R8G8B8A8_SRGB },
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT | VK_FORMAT_FEATURE_TRANSFER_DST_BIT
+        );
+        int num_channels;
+        if (format == VK_FORMAT_R8G8B8_SRGB) num_channels = 3;
+        else num_channels = 4;
+
         // image size
         VkDeviceSize totalImageSize = 0;
         std::vector<VkDeviceSize> imageSize;
@@ -571,11 +580,11 @@ private:
             // load the image using stb library
             int texChannels;
             pixels[i] = stbi_load(scene->normal_maps[i].file_path.c_str(),
-                &texWidth[i], &texHeight[i], &texChannels, STBI_rgb);
+                &texWidth[i], &texHeight[i], &texChannels, num_channels);
             if (!pixels[i]) throw std::runtime_error("failed to load texture image!");
 
             // calculate image size
-            imageSize[i] = texWidth[i] * texHeight[i] * 3;
+            imageSize[i] = texWidth[i] * texHeight[i] * num_channels;
             totalImageSize += imageSize[i];
 
         }
@@ -594,7 +603,11 @@ private:
 
             // flip the memory layout vertically so that it can map correctly
             for (int j = 0; j < texHeight[i]; j++) {
-                memcpy((char*)data + offset + j * texWidth[i] * 3, pixels[i] + (texHeight[i] - 1 - j) * texWidth[i] * 3, texWidth[i] * 3);
+                memcpy(
+                    (char*)data + offset + j * texWidth[i] * num_channels,
+                    pixels[i] + (texHeight[i] - 1 - j) * texWidth[i] * num_channels,
+                    texWidth[i] * num_channels
+                );
             }
 
             // free the loaded image data
@@ -616,7 +629,7 @@ private:
         for (int i = 0; i < scene->normal_maps.size(); i++) {
             imageCreator->createImage(
                 static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]),
-                VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8_SRGB,
+                VK_SAMPLE_COUNT_1_BIT, format,
                 VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 normalMapImage[i]
             );
@@ -642,7 +655,7 @@ private:
             // copy data
             transitionImageLayout(
                 normalMapImage[i],
-                VK_FORMAT_R8G8B8_SRGB,
+                format,
                 VK_IMAGE_LAYOUT_UNDEFINED,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
             );
@@ -650,7 +663,7 @@ private:
                 static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]));
             transitionImageLayout(
                 normalMapImage[i],
-                VK_FORMAT_R8G8B8_SRGB,
+                format,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
@@ -659,13 +672,15 @@ private:
             imageOffset += memRequirements[i].size;
             bufferOffset += imageSize[i];
         }
+
+        createNormalMapImageViews(format);
     }
 
-    void createNormalMapImageViews() {
+    void createNormalMapImageViews(VkFormat format) {
         normalMapImageView.resize(scene->normal_maps.size());
         for (int i = 0; i < scene->normal_maps.size(); i++) {
             normalMapImageView[i] = imageCreator->createImageView(
-                normalMapImage[i], VK_FORMAT_R8G8B8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+                normalMapImage[i], format, VK_IMAGE_ASPECT_COLOR_BIT);
         }
     }
 
