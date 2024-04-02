@@ -1339,8 +1339,12 @@ private:
         vkCmdBindVertexBuffers(commandBuffer, 0, 2, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, scene->index_buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
 
-        int descriptor_set_index = currentFrame * (1 + scene->textures.size() +
-            scene->meshes.size() + scene->meshes_with_normal_map.size());
+        int descriptor_set_index = (
+            1 + scene->textures.size() +
+            scene->normal_maps.size() +
+            scene->meshes.size() +
+            scene->meshes_with_normal_map.size()
+        ) * currentFrame;
 
         // Bind view matrix, projection matrix, lights, eye position
         vkCmdBindDescriptorSets(
@@ -1373,7 +1377,8 @@ private:
                     vkCmdBindDescriptorSets(
                         commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                         basic_graphic_pipeline.layout, 2, 1,
-                        &descriptorSets[descriptor_set_index + scene->textures.size() + j],
+                        &descriptorSets[descriptor_set_index + scene->textures.size() +
+                            scene->normal_maps.size() + j],
                         0, nullptr
                     );
 
@@ -1402,7 +1407,8 @@ private:
                         vkCmdBindDescriptorSets(
                             commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             basic_t_graphic_pipeline.layout, 2, 1,
-                            &descriptorSets[descriptor_set_index + scene->textures.size() + scene->meshes.size() + j],
+                            &descriptorSets[descriptor_set_index + scene->textures.size() +
+                            scene->normal_maps.size() + scene->meshes.size() + j],
                             0, nullptr
                         );
 
@@ -1431,7 +1437,8 @@ private:
                         vkCmdBindDescriptorSets(
                             commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             normal_mapping_pipeline.layout, 2, 1,
-                            &descriptorSets[descriptor_set_index + scene->textures.size() + scene->meshes.size() + j],
+                            &descriptorSets[descriptor_set_index + scene->textures.size() +
+                            scene->normal_maps.size() + scene->meshes.size() + j],
                             0, nullptr
                         );
 
