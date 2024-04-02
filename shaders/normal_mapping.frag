@@ -39,7 +39,7 @@ layout(set = 0, binding = 1) uniform UniformBufferObject {
 
 layout(set = 1, binding = 0) uniform sampler2D texSampler;
 
-layout(set = 2, binding = 1) uniform sampler2D norSampler;
+layout(set = 2, binding = 0) uniform sampler2D norSampler;
 
 layout(location = 0) in vec3 vertex_pos;
 layout(location = 1) in vec3 vertex_normal;
