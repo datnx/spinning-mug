@@ -1425,12 +1425,17 @@ private:
                     // if the mesh use the ith texture
                     if (scene->meshes_with_normal_map[j].texture_index == i) {
 
-                        // bind the model matrix
+                        // bind the normal map and the model matrix
+                        std::vector<VkDescriptorSet> descriptor_sets = {
+                            descriptorSets[descriptor_set_index + scene->textures.size() +
+                            scene->meshes_with_normal_map[j].normal_map_index],
+                            descriptorSets[descriptor_set_index + scene->textures.size() +
+                            scene->normal_maps.size() + scene->meshes.size() + j]
+                        };
                         vkCmdBindDescriptorSets(
                             commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            normal_mapping_pipeline.layout, 2, 1,
-                            &descriptorSets[descriptor_set_index + scene->textures.size() +
-                            scene->normal_maps.size() + scene->meshes.size() + j],
+                            normal_mapping_pipeline.layout, 2, 2,
+                            descriptor_sets.data(),
                             0, nullptr
                         );
 
