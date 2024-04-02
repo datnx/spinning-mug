@@ -1048,117 +1048,114 @@ private:
         imageInfos.resize((scene->textures.size() + scene->normal_maps.size()) * MAX_FRAMES_IN_FLIGHT);
 
         // for each frame, update the buffer info or the image info and the descriptor write of all descriptors
+        VkDeviceSize buffer_info_offset = 0;
+        int buffer_info_index = 0;
+        int image_info_index = 0;
+        int descriptor_write_index = 0;
+        int descriptor_set_index = 0;
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 
             // view matrix and projection matrix
-            VkDeviceSize buffer_info_offset = i * (
-                gpu.getAlignSize(sizeof(ViewProjectrion)) +
-                gpu.getAlignSize(sizeof(FragmentUniform)) +
-                (scene->meshes.size() + scene->meshes_with_normal_map.size()) *
-                gpu.getAlignSize(sizeof(glm::mat4))
-            );
-            int buffer_info_index = i * (2 + scene->meshes.size() +
-                scene->meshes_with_normal_map.size());
-            int image_info_index = i * (scene->textures.size() + scene->normal_maps.size());
-            int descriptor_write_index = i * (2 + scene->textures.size() +
-                scene->meshes.size() + scene->meshes_with_normal_map.size());
-            int descriptor_set_index = i * (1 + scene->textures.size() +
-                scene->meshes.size() + scene->meshes_with_normal_map.size());
             updateBufferInfo(
                 bufferInfos[buffer_info_index],
                 scene->uniform_buffer->buffer,
                 buffer_info_offset,
                 sizeof(ViewProjectrion)
             );
+            buffer_info_offset += gpu.getAlignSize(sizeof(ViewProjectrion));
             updateDescriptorWrite(
                 descriptorWrites[descriptor_write_index],
                 descriptorSets[descriptor_set_index], 0,
                 VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 &bufferInfos[buffer_info_index], nullptr
             );
+            descriptor_write_index++;
+            buffer_info_index++;
 
             // eye location and lights
-            buffer_info_offset += gpu.getAlignSize(sizeof(ViewProjectrion));
-            buffer_info_index++;
             updateBufferInfo(
                 bufferInfos[buffer_info_index],
                 scene->uniform_buffer->buffer,
                 buffer_info_offset,
                 sizeof(FragmentUniform)
             );
-            descriptor_write_index++;
+            buffer_info_offset += gpu.getAlignSize(sizeof(FragmentUniform));
             updateDescriptorWrite(
                 descriptorWrites[descriptor_write_index],
                 descriptorSets[descriptor_set_index], 1,
                 VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 &bufferInfos[buffer_info_index], nullptr
             );
-
-            // textures
             descriptor_write_index++;
             descriptor_set_index++;
+            buffer_info_index++;
+
+            // textures
             for (int j = 0; j < scene->textures.size(); j++) {
-                updateImageInfo(imageInfos[image_info_index + j], textureImageView[j], textureSampler);
+                updateImageInfo(imageInfos[image_info_index], textureImageView[j], textureSampler);
                 updateDescriptorWrite(
-                    descriptorWrites[descriptor_write_index + j],
-                    descriptorSets[descriptor_set_index + j], 0,
+                    descriptorWrites[descriptor_write_index],
+                    descriptorSets[descriptor_set_index], 0,
                     VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                    nullptr, &imageInfos[image_info_index + j]);
+                    nullptr, &imageInfos[image_info_index]
+                );
+                descriptor_write_index++;
+                descriptor_set_index++;
+                image_info_index++;
             }
-            descriptor_write_index += scene->textures.size();
-            descriptor_set_index += scene->textures.size();
-            image_info_index += scene->textures.size();
 
             // normal maps
             for (int j = 0; j < scene->normal_maps.size(); j++) {
-                updateImageInfo(imageInfos[image_info_index + j], normalMapImageView[j], textureSampler);
+                updateImageInfo(imageInfos[image_info_index], normalMapImageView[j], textureSampler);
                 updateDescriptorWrite(
-                    descriptorWrites[descriptor_write_index + j],
-                    descriptorSets[descriptor_set_index + j], 0,
+                    descriptorWrites[descriptor_write_index],
+                    descriptorSets[descriptor_set_index], 0,
                     VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                    nullptr, &imageInfos[image_info_index + j]
+                    nullptr, &imageInfos[image_info_index]
                 );
+                descriptor_write_index++;
+                descriptor_set_index++;
+                image_info_index++;
             }
-            descriptor_write_index += scene->normal_maps.size();
-            descriptor_set_index += scene->normal_maps.size();
 
             // meshes
-            buffer_info_offset += gpu.getAlignSize(sizeof(FragmentUniform));
-            buffer_info_index++;
             for (int j = 0; j < scene->meshes.size(); j++) {
                 updateBufferInfo(
-                    bufferInfos[buffer_info_index + j],
+                    bufferInfos[buffer_info_index],
                     scene->uniform_buffer->buffer,
                     buffer_info_offset,
                     sizeof(glm::mat4)
                 );
-                updateDescriptorWrite(
-                    descriptorWrites[descriptor_write_index + j],
-                    descriptorSets[descriptor_set_index + j], 0,
-                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                    &bufferInfos[buffer_info_index + j], nullptr
-                );
                 buffer_info_offset += gpu.getAlignSize(sizeof(glm::mat4));
+                updateDescriptorWrite(
+                    descriptorWrites[descriptor_write_index],
+                    descriptorSets[descriptor_set_index], 0,
+                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                    &bufferInfos[buffer_info_index], nullptr
+                );
+                descriptor_write_index++;
+                descriptor_set_index++;
+                buffer_info_index++;
             }
-            descriptor_write_index += scene->meshes.size();
-            buffer_info_index += scene->meshes.size();
-            descriptor_set_index += scene->meshes.size();
 
             // meshes with normal map
             for (int j = 0; j < scene->meshes_with_normal_map.size(); j++) {
                 updateBufferInfo(
-                    bufferInfos[buffer_info_index + j],
+                    bufferInfos[buffer_info_index],
                     scene->uniform_buffer->buffer,
                     buffer_info_offset,
                     sizeof(glm::mat4)
                 );
-                updateDescriptorWrite(
-                    descriptorWrites[descriptor_write_index + j],
-                    descriptorSets[descriptor_set_index + j], 0,
-                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                    &bufferInfos[buffer_info_index + j], nullptr
-                );
                 buffer_info_offset += gpu.getAlignSize(sizeof(glm::mat4));
+                updateDescriptorWrite(
+                    descriptorWrites[descriptor_write_index],
+                    descriptorSets[descriptor_set_index], 0,
+                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                    &bufferInfos[buffer_info_index], nullptr
+                );
+                descriptor_write_index++;
+                descriptor_set_index++;
+                buffer_info_index++;
             }
         }
 
