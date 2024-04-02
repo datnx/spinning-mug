@@ -262,7 +262,8 @@ private:
         );
 
         // create normal mapping pipeline
-        setLayouts[2] = descriptorSetLayout_3;
+        setLayouts[2] = descriptorSetLayout_1;
+        setLayouts.push_back(descriptorSetLayout_2);
         normal_mapping_pipeline.create(
             &gpu, msaa, renderPass->getRenderPass(),
             "shaders/normal_mapping_vert.spv", "shaders/normal_mapping_frag.spv",
