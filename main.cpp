@@ -98,7 +98,8 @@ private:
     std::vector<VkImageView> swapChainImageViews;
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
-    VkDescriptorSetLayout descriptorSetLayout_0, descriptorSetLayout_1, descriptorSetLayout_2;
+    VkDescriptorSetLayout descriptorSetLayout_0, descriptorSetLayout_1,
+        descriptorSetLayout_2, descriptorSetLayout_3;
     
     Pipeline basic_graphic_pipeline, basic_t_graphic_pipeline;
 
@@ -854,16 +855,27 @@ private:
         std::array<VkDescriptorSetLayoutBinding, 1> bindings_1 = {samplerLayoutBinding};
         std::array<VkDescriptorSetLayoutBinding, 1> bindings_2 = {vertex_uniform_binding};
 
+        // bindings for the normal mapping pipeline
+        samplerLayoutBinding.binding = 1;
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings_3 = {vertex_uniform_binding, samplerLayoutBinding};
+
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = 2;
-        layoutInfo.pBindings = bindings_0.data();
 
+        layoutInfo.bindingCount = 2;
+
+        layoutInfo.pBindings = bindings_0.data();
         if (vkCreateDescriptorSetLayout(gpu.logical_gpu, &layoutInfo, nullptr, &descriptorSetLayout_0) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
 
+        layoutInfo.pBindings = bindings_3.data();
+        if (vkCreateDescriptorSetLayout(gpu.logical_gpu, &layoutInfo, nullptr, &descriptorSetLayout_3) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
+
         layoutInfo.bindingCount = 1;
+
         layoutInfo.pBindings = bindings_1.data();
         if (vkCreateDescriptorSetLayout(gpu.logical_gpu, &layoutInfo, nullptr, &descriptorSetLayout_1) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout!");
