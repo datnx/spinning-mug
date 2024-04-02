@@ -101,7 +101,7 @@ private:
     VkDescriptorSetLayout descriptorSetLayout_0, descriptorSetLayout_1,
         descriptorSetLayout_2, descriptorSetLayout_3;
     
-    Pipeline basic_graphic_pipeline, basic_t_graphic_pipeline;
+    Pipeline basic_graphic_pipeline, basic_t_graphic_pipeline, normal_mapping_pipeline;
 
     Scene* scene;
 
@@ -256,6 +256,16 @@ private:
         basic_t_graphic_pipeline.create(
             &gpu, msaa, renderPass->getRenderPass(),
             "shaders/vert_t.spv", "shaders/frag.spv",
+            VertexWithTangent::getBindingDescription(),
+            VertexWithTangent::getAttributeDescriptions(),
+            setLayouts
+        );
+
+        // create normal mapping pipeline
+        setLayouts[2] = descriptorSetLayout_3;
+        normal_mapping_pipeline.create(
+            &gpu, msaa, renderPass->getRenderPass(),
+            "shaders/normal_mapping_vert.spv", "shaders/normal_mapping_frag.spv",
             VertexWithTangent::getBindingDescription(),
             VertexWithTangent::getAttributeDescriptions(),
             setLayouts
@@ -1395,6 +1405,35 @@ private:
                         vkCmdBindDescriptorSets(
                             commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             basic_t_graphic_pipeline.layout, 2, 1,
+                            &descriptorSets[descriptor_set_index + scene->textures.size() + scene->meshes.size() + j],
+                            0, nullptr
+                        );
+
+                        // draw call
+                        vkCmdDrawIndexed(
+                            commandBuffer,
+                            static_cast<uint32_t>(scene->meshes_with_normal_map[j].indices.size()),
+                            1, scene->meshes_with_normal_map[j].index_offset,
+                            scene->meshes_with_normal_map[j].vertex_offset, 0
+                        );
+                    }
+                }
+            } else {
+
+                // bind normal mapping pipeline
+                vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    normal_mapping_pipeline.pipeline);
+
+                // for each mesh
+                for (int j = 0; j < scene->meshes_with_normal_map.size(); j++) {
+
+                    // if the mesh use the ith texture
+                    if (scene->meshes_with_normal_map[j].texture_index == i) {
+
+                        // bind the model matrix
+                        vkCmdBindDescriptorSets(
+                            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            normal_mapping_pipeline.layout, 2, 1,
                             &descriptorSets[descriptor_set_index + scene->textures.size() + scene->meshes.size() + j],
                             0, nullptr
                         );
