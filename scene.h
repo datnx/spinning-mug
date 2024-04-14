@@ -66,6 +66,10 @@ struct Texture {
 struct NormalMap {
 	std::string file_path;
 
+	// constructor
+	NormalMap();
+	NormalMap(std::string path);
+
 	// serialize this normal map to the file
 	void serialize(std::ofstream& file);
 

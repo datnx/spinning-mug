@@ -186,6 +186,12 @@ void Texture::deserialize(std::ifstream& file) {
 	file.read(&file_path[0], str_size);
 }
 
+NormalMap::NormalMap() {}
+
+NormalMap::NormalMap(std::string path) {
+	file_path = path;
+}
+
 void NormalMap::serialize(std::ofstream& file) {
 	uint16_t str_size = file_path.size();
 	file.write(reinterpret_cast<char*>(&str_size), sizeof(uint16_t));
