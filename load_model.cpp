@@ -1,8 +1,6 @@
 #include <fstream>
 #include <unordered_map>
 #include <unordered_set>
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
 #include <iostream>
 #include <stack>
 #include <filesystem>
@@ -11,29 +9,6 @@
 #include "math.h"
 #include "load_model.h"
 #include "string_utils.h"
-
-void print_matrix(aiMatrix4x4 m) {
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			std::cout << m[i][j] << " ";
-		}
-		std::cout << std::endl;
-	}
-}
-
-void print_color(aiColor3D c) {
-	std::cout << "(" << c.r << ", " << c.g << ", " << c.b << ")";
-}
-
-void print_node_structure(std::string file_path) {
-	
-	// load the file
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(file_path, aiProcess_Triangulate);
-	if (scene == NULL) throw std::runtime_error("Failed to load the file");
-
-	std::cout << scene->mRootNode->mNumChildren << std::endl;
-}
 
 glm::vec3 parse_coordinates(std::string line, int start) {
 	std::vector<std::string> coordinates = split(line.substr(start), ' ');
