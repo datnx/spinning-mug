@@ -1070,6 +1070,110 @@ private:
         }
     }
 
+    std::vector<VkDescriptorBufferInfo> prepare_buffer_info() {
+        
+        VkDescriptorBufferInfo buffer_info{};
+        buffer_info.buffer = scene->uniform_buffer->buffer;
+        std::vector<VkDescriptorBufferInfo> bufferInfos(
+            (2 + scene->meshes.size() + scene->meshes_with_normal_map.size()) *
+            MAX_FRAMES_IN_FLIGHT, buffer_info);
+
+        VkDeviceSize offset = 0;
+        int index = 0;
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            
+            // view matrix and projection matrix
+            bufferInfos[index].offset = offset;
+            bufferInfos[index].range = sizeof(ViewProjectrion);
+            offset += gpu.getAlignSize(sizeof(ViewProjectrion));
+            index++;
+
+            // eye location and lights
+            bufferInfos[index].offset = offset;
+            bufferInfos[index].range = sizeof(FragmentUniform);
+            offset += gpu.getAlignSize(sizeof(FragmentUniform));
+            index++;
+
+            // meshes
+            for (int j = 0; j < scene->meshes.size() + scene->meshes_with_normal_map.size(); j++) {
+                bufferInfos[index].offset = offset;
+                bufferInfos[index].range = sizeof(glm::mat4);
+                offset += gpu.getAlignSize(sizeof(glm::mat4));
+                index++;
+            }
+        }
+
+        return bufferInfos;
+    }
+
+    std::vector<VkDescriptorImageInfo> prepare_image_info() {
+
+        VkDescriptorImageInfo image_info{};
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        image_info.sampler = textureSampler;
+        std::vector<VkDescriptorImageInfo> imageInfos(
+            (scene->textures.size() + scene->normal_maps.size()) *
+            MAX_FRAMES_IN_FLIGHT, image_info);
+
+        int index = 0;
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            
+            // textures
+            for (int j = 0; j < scene->textures.size(); j++) {
+                imageInfos[index].imageView = textureImageView[j];
+                index++;
+            }
+
+            // normal maps
+            for (int j = 0; j < scene->normal_maps.size(); j++) {
+                imageInfos[index].imageView = normalMapImageView[j];
+                index++;
+            }
+        }
+
+        return imageInfos;
+    }
+
+    std::vector<VkWriteDescriptorSet> prepare_descriptor_write(
+        std::vector<VkDescriptorBufferInfo>& bufferInfos,
+        std::vector<VkDescriptorImageInfo>& imageInfos
+    ) {
+
+        std::vector<VkWriteDescriptorSet> descriptorWrites;
+        descriptorWrites.resize((2 + scene->textures.size() + scene->normal_maps.size() +
+            scene->meshes.size() + scene->meshes_with_normal_map.size()) * MAX_FRAMES_IN_FLIGHT);
+
+        int write_index = 0, set_index = 0, buffer_index = 0, image_index = 0;
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            
+            // view matrix and projection matrix
+            updateDescriptorWrite(descriptorWrites[write_index], descriptorSets[set_index], 0,
+                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &bufferInfos[buffer_index], nullptr);
+            write_index++; buffer_index++;
+
+            // eye location and lights
+            updateDescriptorWrite(descriptorWrites[write_index], descriptorSets[set_index], 1,
+                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &bufferInfos[buffer_index], nullptr);
+            write_index++; buffer_index++; set_index++;
+            
+            // textures and normal maps
+            for (int j = 0; j < scene->textures.size() + scene->normal_maps.size(); j++) {
+                updateDescriptorWrite(descriptorWrites[write_index], descriptorSets[set_index], 0,
+                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, nullptr, &imageInfos[image_index]);
+                write_index++; image_index++; set_index++;
+            }
+
+            // meshes
+            for (int j = 0; j < scene->meshes.size() + scene->meshes_with_normal_map.size(); j++) {
+                updateDescriptorWrite(descriptorWrites[write_index], descriptorSets[set_index], 0,
+                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &bufferInfos[buffer_index], nullptr);
+                write_index++; buffer_index++; set_index++;
+            }
+        }
+
+        return descriptorWrites;
+    }
+
     void createDescriptorSets() {
         /*
         create all the descriptor sets
@@ -1077,152 +1181,15 @@ private:
 
         allocate_descriptor_sets();
 
-        // write to the descriptors
-        std::vector<VkWriteDescriptorSet> descriptorWrites;
-        descriptorWrites.resize((2 + scene->textures.size() + scene->normal_maps.size() +
-            scene->meshes.size() + scene->meshes_with_normal_map.size()) * MAX_FRAMES_IN_FLIGHT);
-        std::vector<VkDescriptorBufferInfo> bufferInfos;
-        bufferInfos.resize((2 + scene->meshes.size() +
-            scene->meshes_with_normal_map.size()) * MAX_FRAMES_IN_FLIGHT);
-        std::vector<VkDescriptorImageInfo> imageInfos;
-        imageInfos.resize((scene->textures.size() + scene->normal_maps.size()) * MAX_FRAMES_IN_FLIGHT);
+        std::vector<VkDescriptorBufferInfo> bufferInfos = prepare_buffer_info();
 
-        // for each frame, update the buffer info or the image info and the descriptor write of all descriptors
-        VkDeviceSize buffer_info_offset = 0;
-        int buffer_info_index = 0;
-        int image_info_index = 0;
-        int descriptor_write_index = 0;
-        int descriptor_set_index = 0;
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        std::vector<VkDescriptorImageInfo> imageInfos = prepare_image_info();
 
-            // view matrix and projection matrix
-            updateBufferInfo(
-                bufferInfos[buffer_info_index],
-                scene->uniform_buffer->buffer,
-                buffer_info_offset,
-                sizeof(ViewProjectrion)
-            );
-            buffer_info_offset += gpu.getAlignSize(sizeof(ViewProjectrion));
-            updateDescriptorWrite(
-                descriptorWrites[descriptor_write_index],
-                descriptorSets[descriptor_set_index], 0,
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                &bufferInfos[buffer_info_index], nullptr
-            );
-            descriptor_write_index++;
-            buffer_info_index++;
-
-            // eye location and lights
-            updateBufferInfo(
-                bufferInfos[buffer_info_index],
-                scene->uniform_buffer->buffer,
-                buffer_info_offset,
-                sizeof(FragmentUniform)
-            );
-            buffer_info_offset += gpu.getAlignSize(sizeof(FragmentUniform));
-            updateDescriptorWrite(
-                descriptorWrites[descriptor_write_index],
-                descriptorSets[descriptor_set_index], 1,
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                &bufferInfos[buffer_info_index], nullptr
-            );
-            descriptor_write_index++;
-            descriptor_set_index++;
-            buffer_info_index++;
-
-            // textures
-            for (int j = 0; j < scene->textures.size(); j++) {
-                updateImageInfo(imageInfos[image_info_index], textureImageView[j], textureSampler);
-                updateDescriptorWrite(
-                    descriptorWrites[descriptor_write_index],
-                    descriptorSets[descriptor_set_index], 0,
-                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                    nullptr, &imageInfos[image_info_index]
-                );
-                descriptor_write_index++;
-                descriptor_set_index++;
-                image_info_index++;
-            }
-
-            // normal maps
-            for (int j = 0; j < scene->normal_maps.size(); j++) {
-                updateImageInfo(imageInfos[image_info_index], normalMapImageView[j], textureSampler);
-                updateDescriptorWrite(
-                    descriptorWrites[descriptor_write_index],
-                    descriptorSets[descriptor_set_index], 0,
-                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                    nullptr, &imageInfos[image_info_index]
-                );
-                descriptor_write_index++;
-                descriptor_set_index++;
-                image_info_index++;
-            }
-
-            // meshes
-            for (int j = 0; j < scene->meshes.size(); j++) {
-                updateBufferInfo(
-                    bufferInfos[buffer_info_index],
-                    scene->uniform_buffer->buffer,
-                    buffer_info_offset,
-                    sizeof(glm::mat4)
-                );
-                buffer_info_offset += gpu.getAlignSize(sizeof(glm::mat4));
-                updateDescriptorWrite(
-                    descriptorWrites[descriptor_write_index],
-                    descriptorSets[descriptor_set_index], 0,
-                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                    &bufferInfos[buffer_info_index], nullptr
-                );
-                descriptor_write_index++;
-                descriptor_set_index++;
-                buffer_info_index++;
-            }
-
-            // meshes with normal map
-            for (int j = 0; j < scene->meshes_with_normal_map.size(); j++) {
-                updateBufferInfo(
-                    bufferInfos[buffer_info_index],
-                    scene->uniform_buffer->buffer,
-                    buffer_info_offset,
-                    sizeof(glm::mat4)
-                );
-                buffer_info_offset += gpu.getAlignSize(sizeof(glm::mat4));
-                updateDescriptorWrite(
-                    descriptorWrites[descriptor_write_index],
-                    descriptorSets[descriptor_set_index], 0,
-                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                    &bufferInfos[buffer_info_index], nullptr
-                );
-                descriptor_write_index++;
-                descriptor_set_index++;
-                buffer_info_index++;
-            }
-        }
+        std::vector<VkWriteDescriptorSet> descriptorWrites = prepare_descriptor_write(
+            bufferInfos, imageInfos);
 
         // use the descriptorWrites to update descriptorSets
         vkUpdateDescriptorSets(gpu.logical_gpu, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-    }
-
-    void updateBufferInfo(VkDescriptorBufferInfo& bufferInfo, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size) {
-        /*
-        update a VkDescriptorBufferInfo
-        */
-
-        bufferInfo = {};
-        bufferInfo.buffer = buffer;
-        bufferInfo.offset = offset;
-        bufferInfo.range = size;
-    }
-
-    void updateImageInfo(VkDescriptorImageInfo& imageInfo, VkImageView imageView, VkSampler sampler) {
-        /*
-        update a VkDescriptorImageInfo
-        */
-
-        imageInfo = {};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = imageView;
-        imageInfo.sampler = sampler;
     }
 
     void updateDescriptorWrite(VkWriteDescriptorSet& descriptorWrite, VkDescriptorSet set, uint32_t binding,
