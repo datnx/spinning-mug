@@ -1025,17 +1025,12 @@ private:
         }
     }
 
-    void createDescriptorSets() {
-        /*
-        create all the descriptor sets
-        */
-
-        // arrange the layouts
+    std::vector<VkDescriptorSetLayout> arrange_layouts() {
         std::vector<VkDescriptorSetLayout> layouts;
-        
+
         // for each frame
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            
+
             // this set is for view matrix, projection matrix, eye location, and lights
             layouts.push_back(descriptorSetLayout_0);
 
@@ -1054,6 +1049,13 @@ private:
                 layouts.push_back(descriptorSetLayout_2);
         }
 
+        return layouts;
+    }
+
+    void allocate_descriptor_sets() {
+        // arrange the layouts
+        std::vector<VkDescriptorSetLayout> layouts = arrange_layouts();
+        
         // prepare for allocation
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1066,6 +1068,14 @@ private:
         if (vkAllocateDescriptorSets(gpu.logical_gpu, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
+    }
+
+    void createDescriptorSets() {
+        /*
+        create all the descriptor sets
+        */
+
+        allocate_descriptor_sets();
 
         // write to the descriptors
         std::vector<VkWriteDescriptorSet> descriptorWrites;
