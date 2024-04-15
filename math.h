@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <vector>
 
 glm::vec3 normalize(glm::vec3 vector);
 glm::mat4 matmul(glm::mat4 A, glm::mat4 B);

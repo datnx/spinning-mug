@@ -455,6 +455,38 @@ private:
         createFramebuffers();
     }
 
+    void calculate_offsets(
+        std::vector<VkDeviceSize>& offsets,
+        std::vector<VkMemoryRequirements>& requirements
+    ) {
+        /*
+        Calculate an array of offsets for images so that the alignment is correct
+        */
+
+        // sort the indices of the image in the order of decreasing alignment
+        std::vector<int> sorted_indices;
+        std::vector<VkDeviceSize> alignments;
+        alignments.resize(requirements.size());
+        for (int i = 0; i < requirements.size(); i++) {
+            alignments[i] = requirements[i].alignment;
+        }
+        argsort(alignments, sorted_indices);
+
+        // calculate the offsets
+        std::vector<VkDeviceSize> temp_offsets;
+        temp_offsets.resize(requirements.size());
+        temp_offsets[0] = 0;
+        for (int i = 1; i < requirements.size(); i++) {
+            temp_offsets[i] = temp_offsets[i - 1] + requirements[sorted_indices[i - 1]].size;
+        }
+
+        // put the offsets into the correct order
+        offsets.resize(requirements.size());
+        for (int i = 0; i < requirements.size(); i++) {
+            offsets[sorted_indices[i]] = temp_offsets[i];
+        }
+    }
+
     void createTextureImages() {
         /*
         Load images from files and create texture images
@@ -533,13 +565,16 @@ private:
             gpu.findMemoryType(typeFilter, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
             textureImageMemory);
 
+        // reorder the offsets
+        std::vector<VkDeviceSize> imageOffset;
+        calculate_offsets(imageOffset, memRequirements);
+
         // bind the VkImage to the memory and copy data from the staging buffer to the VkImage
-        VkDeviceSize imageOffset = 0;
         VkDeviceSize bufferOffset = 0;
         for (int i = 0; i < scene->textures.size(); i++) {
             
             // bind the VkImage
-            vkBindImageMemory(gpu.logical_gpu, textureImage[i], textureImageMemory, imageOffset);
+            vkBindImageMemory(gpu.logical_gpu, textureImage[i], textureImageMemory, imageOffset[i]);
 
             // copy data
             transitionImageLayout(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -548,7 +583,6 @@ private:
             transitionImageLayout(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
             // update the offset
-            imageOffset += memRequirements[i].size;
             bufferOffset += imageSize[i];
         }
     }
@@ -658,13 +692,16 @@ private:
             normalMapImageMemory
         );
 
+        // reorder the offsets
+        std::vector<VkDeviceSize> imageOffset;
+        calculate_offsets(imageOffset, memRequirements);
+
         // bind the VkImage to the memory and copy data from the staging buffer to the VkImage
-        VkDeviceSize imageOffset = 0;
         VkDeviceSize bufferOffset = 0;
         for (int i = 0; i < scene->normal_maps.size(); i++) {
 
             // bind the VkImage
-            vkBindImageMemory(gpu.logical_gpu, normalMapImage[i], normalMapImageMemory, imageOffset);
+            vkBindImageMemory(gpu.logical_gpu, normalMapImage[i], normalMapImageMemory, imageOffset[i]);
 
             // copy data
             transitionImageLayout(
@@ -683,7 +720,6 @@ private:
             );
 
             // update the offset
-            imageOffset += memRequirements[i].size;
             bufferOffset += imageSize[i];
         }
 
