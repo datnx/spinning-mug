@@ -1520,20 +1520,32 @@ private:
         }
     }
 
-    void drawFrame() {
+    uint32_t get_next_image() {
+        
+        // wait for the current frame to finish rendering
         vkWaitForFences(gpu.logical_gpu, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
+        // get the next available image
         uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(gpu.logical_gpu, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
-
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             recreateSwapChain();
-            return;
+            return -1;
         } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
+        // reset the fence
         vkResetFences(gpu.logical_gpu, 1, &inFlightFences[currentFrame]);
+
+        // return
+        return imageIndex;
+    }
+
+    void drawFrame() {
+        
+        uint32_t imageIndex = get_next_image();
+        if (imageIndex == -1) return;
 
         char* p = (char*)scene->uniformBuffersMapped;
         size_t view_projection_size = gpu.getAlignSize(sizeof(ViewProjectrion));
@@ -1597,7 +1609,7 @@ private:
 
         presentInfo.pImageIndices = &imageIndex;
 
-        result = vkQueuePresentKHR(gpu.presentQueue, &presentInfo);
+         VkResult result = vkQueuePresentKHR(gpu.presentQueue, &presentInfo);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
             framebufferResized = false;
