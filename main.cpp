@@ -1542,37 +1542,71 @@ private:
         return imageIndex;
     }
 
+    void update_view_projection(char* p, size_t& offset) {
+        ViewProjectrion view_proj_matrix;
+        view_proj_matrix.view = lookAt(
+            scene->camera.cameraPos,
+            scene->camera.cameraPos + scene->camera.cameraFront,
+            scene->camera.cameraUp
+        );
+        view_proj_matrix.proj = perspective(
+            glm::radians(45.0f),
+            swapChainExtent.width / (float)swapChainExtent.height,
+            0.1f, 100.0f
+        );
+        view_proj_matrix.proj[1][1] *= -1;
+        memcpy(p + offset, &view_proj_matrix, sizeof(ViewProjectrion));
+        offset += gpu.getAlignSize(sizeof(ViewProjectrion));
+    }
+
+    void update_eye(char* p, size_t& offset) {
+        fubo.eye = scene->camera.cameraPos;
+        memcpy(p + offset, &fubo, sizeof(FragmentUniform));
+        offset += gpu.getAlignSize(sizeof(FragmentUniform));
+    }
+
+    void update_model_tranforms(char* p, size_t& offset) {
+        for (int i = 0; i < scene->meshes.size(); i++) {
+            memcpy(p + offset, &scene->meshes[i].init_transform, sizeof(glm::mat4));
+            offset += gpu.getAlignSize(sizeof(glm::mat4));
+        }
+        for (int i = 0; i < scene->meshes_with_normal_map.size(); i++) {
+            memcpy(p + offset,
+                &scene->meshes_with_normal_map[i].init_transform, sizeof(glm::mat4));
+            offset += gpu.getAlignSize(sizeof(glm::mat4));
+        }
+    }
+
+    void update_uniform_buffer() {
+        /*
+        Update the uniform buffer
+        */
+
+        // memory address and offset
+        char* p = (char*)scene->uniformBuffersMapped;
+        size_t offset = currentFrame * (
+            gpu.getAlignSize(sizeof(ViewProjectrion)) +
+            gpu.getAlignSize(sizeof(FragmentUniform)) +
+            gpu.getAlignSize(sizeof(glm::mat4)) *
+            (scene->meshes.size() + scene->meshes_with_normal_map.size())
+        );
+
+        // update the view and projection matrix
+        update_view_projection(p, offset);
+
+        // update the eye location
+        update_eye(p, offset);
+
+        // update model transforms
+        update_model_tranforms(p, offset);
+    }
+
     void drawFrame() {
         
         uint32_t imageIndex = get_next_image();
         if (imageIndex == -1) return;
 
-        char* p = (char*)scene->uniformBuffersMapped;
-        size_t view_projection_size = gpu.getAlignSize(sizeof(ViewProjectrion));
-        size_t fragment_size = gpu.getAlignSize(sizeof(FragmentUniform));
-        size_t model_size = gpu.getAlignSize(sizeof(glm::mat4));
-        size_t uniform_size = view_projection_size + fragment_size +
-            model_size * (scene->meshes.size() + scene->meshes_with_normal_map.size());
-
-        // update model transforms
-        for (int i = 0; i < scene->meshes.size(); i++)
-            memcpy(p + currentFrame * uniform_size + view_projection_size + fragment_size +
-                i * model_size, &scene->meshes[i].init_transform, sizeof(glm::mat4));
-        for (int i = 0; i < scene->meshes_with_normal_map.size(); i++)
-            memcpy(p + currentFrame * uniform_size + view_projection_size + fragment_size +
-                scene->meshes.size() * model_size + i * model_size,
-                &scene->meshes_with_normal_map[i].init_transform, sizeof(glm::mat4));
-        
-        fubo.eye = scene->camera.cameraPos;
-        memcpy(p + currentFrame * uniform_size + view_projection_size, &fubo, sizeof(FragmentUniform));
-        
-        ViewProjectrion view_proj_matrix;
-        view_proj_matrix.view = lookAt(scene->camera.cameraPos,
-            scene->camera.cameraPos + scene->camera.cameraFront, scene->camera.cameraUp);
-        view_proj_matrix.proj = perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 100.0f);
-        view_proj_matrix.proj[1][1] *= -1;
-
-        memcpy(p + currentFrame * uniform_size, &view_proj_matrix, sizeof(ViewProjectrion));
+        update_uniform_buffer();
 
         vkResetCommandBuffer(commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
         recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
