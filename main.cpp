@@ -1304,29 +1304,33 @@ private:
         }
     }
 
-    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+    void begin_command_buffer(VkCommandBuffer commandBuffer) {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
         if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
             throw std::runtime_error("failed to begin recording command buffer!");
         }
+    }
 
+    void begin_render_pass(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = renderPass->getRenderPass();
         renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
-        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = swapChainExtent;
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-        clearValues[1].depthStencil = {1.0f, 0};
+        clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+        clearValues[1].depthStencil = { 1.0f, 0 };
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    }
 
+    void set_viewport(VkCommandBuffer commandBuffer) {
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -1335,145 +1339,163 @@ private:
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+    }
 
+    void set_scissor(VkCommandBuffer commandBuffer) {
         VkRect2D scissor{};
         scissor.offset = { 0, 0 };
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    }
 
-        VkBuffer vertexBuffers[2] = {scene->vertex_buffer->buffer, scene->vertex_buffer->buffer};
-        VkDeviceSize offsets[2] = {0, sizeof(Vertex) * scene->get_num_vertices()};
+    void bind_vertex_and_index_buffer(VkCommandBuffer commandBuffer) {
+        VkBuffer vertexBuffers[2] = { scene->vertex_buffer->buffer, scene->vertex_buffer->buffer };
+        VkDeviceSize offsets[2] = { 0, sizeof(Vertex) * scene->get_num_vertices() };
         vkCmdBindVertexBuffers(commandBuffer, 0, 2, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, scene->index_buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
+    }
 
-        int descriptor_set_index = (
-            1 + scene->textures.size() +
-            scene->normal_maps.size() +
-            scene->meshes.size() +
-            scene->meshes_with_normal_map.size()
-        ) * currentFrame;
+    void bind_global_uniform(VkCommandBuffer commandBuffer) {
+        /*
+        This includes view matrix, projection matrix, lights, eye position
+        */
 
-        // Bind view matrix, projection matrix, lights, eye position
-        vkCmdBindDescriptorSets(
-            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-            basic_graphic_pipeline.layout, 0, 1,
-            &descriptorSets[descriptor_set_index], 0, nullptr
-        );
-        descriptor_set_index++;
+        int index = (1 + scene->textures.size() + scene->normal_maps.size() + scene->meshes.size() +
+            scene->meshes_with_normal_map.size()) * currentFrame;
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            basic_graphic_pipeline.layout, 0, 1, &descriptorSets[index], 0, nullptr);
+    }
+
+    void bind_texture(VkCommandBuffer commandBuffer, int i) {
+        /*
+        Bind the ith texture
+        */
+        int index = (1 + scene->textures.size() + scene->normal_maps.size() + scene->meshes.size() +
+            scene->meshes_with_normal_map.size()) * currentFrame + 1 + i;
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            basic_graphic_pipeline.layout, 1, 1, &descriptorSets[index], 0, nullptr);
+    }
+
+    void render_basic_mesh(VkCommandBuffer commandBuffer, int i) {
+        /*
+        Render any basic mesh that has the ith texture
+        */
+        
+        // bind the pipeline to render basic meshes first
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, basic_graphic_pipeline.pipeline);
+
+        // for each mesh
+        for (int j = 0; j < scene->meshes.size(); j++) {
+
+            // if the mesh use the ith texture
+            if (scene->meshes[j].texture_index == i) {
+
+                // bind the model matrix
+                int index = (1 + scene->textures.size() + scene->normal_maps.size() + scene->meshes.size() +
+                    scene->meshes_with_normal_map.size()) * currentFrame + 1 + scene->textures.size() +
+                    scene->normal_maps.size() + j;
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    basic_graphic_pipeline.layout, 2, 1, &descriptorSets[index], 0, nullptr);
+
+                // draw call
+                vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(scene->meshes[j].indices.size()),
+                    1, scene->meshes[j].index_offset, scene->meshes[j].vertex_offset, 0);
+            }
+        }
+    }
+
+    void render_normal_map_meshes_without_normal_map(VkCommandBuffer commandBuffer, int i) {
+        // bind the pipeline that render the meshes_with_normal_map
+        // without normal mapping
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, basic_t_graphic_pipeline.pipeline);
+
+        // for each mesh
+        for (int j = 0; j < scene->meshes_with_normal_map.size(); j++) {
+
+            // if the mesh use the ith texture
+            if (scene->meshes_with_normal_map[j].texture_index == i) {
+
+                // bind the model matrix
+                int index = (1 + scene->textures.size() + scene->normal_maps.size() + scene->meshes.size() +
+                    scene->meshes_with_normal_map.size()) * currentFrame + 1 + scene->textures.size() +
+                    scene->normal_maps.size() + scene->meshes.size() + j;
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    basic_t_graphic_pipeline.layout, 2, 1, &descriptorSets[index],0, nullptr);
+
+                // draw call
+                vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(scene->meshes_with_normal_map[j].indices.size()),
+                    1, scene->meshes_with_normal_map[j].index_offset, scene->meshes_with_normal_map[j].vertex_offset, 0);
+            }
+        }
+    }
+
+    void render_normal_map_meshes(VkCommandBuffer commandBuffer, int i) {
+        // bind normal mapping pipeline
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, normal_mapping_pipeline.pipeline);
+
+        // for each mesh
+        for (int j = 0; j < scene->meshes_with_normal_map.size(); j++) {
+
+            // if the mesh use the ith texture
+            if (scene->meshes_with_normal_map[j].texture_index == i) {
+
+                // bind the normal map and the model matrix
+                int index_0 = (1 + scene->textures.size() + scene->normal_maps.size() + scene->meshes.size() +
+                    scene->meshes_with_normal_map.size())* currentFrame + 1 + scene->textures.size() +
+                    scene->meshes_with_normal_map[j].normal_map_index;
+                int index_1 = (1 + scene->textures.size() + scene->normal_maps.size() + scene->meshes.size() +
+                    scene->meshes_with_normal_map.size()) * currentFrame + 1 + scene->textures.size() +
+                    scene->normal_maps.size() + scene->meshes.size() + j;
+                std::vector<VkDescriptorSet> descriptor_sets = { descriptorSets[index_0], descriptorSets[index_1] };
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    normal_mapping_pipeline.layout, 2, 2, descriptor_sets.data(), 0, nullptr);
+
+                // draw call
+                vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(scene->meshes_with_normal_map[j].indices.size()),
+                    1, scene->meshes_with_normal_map[j].index_offset, scene->meshes_with_normal_map[j].vertex_offset, 0);
+            }
+        }
+    }
+
+    void render_all_meshes(VkCommandBuffer commandBuffer) {
+        bind_vertex_and_index_buffer(commandBuffer);
+
+        bind_global_uniform(commandBuffer);
 
         // for each texture
         for (int i = 0; i < scene->textures.size(); i++) {
 
-            // bind the texture
-            vkCmdBindDescriptorSets(
-                commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                basic_graphic_pipeline.layout, 1, 1,
-                &descriptorSets[descriptor_set_index + i], 0, nullptr
-            );
+            bind_texture(commandBuffer, i);
 
-            // bind the pipeline to render basic meshes first
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, basic_graphic_pipeline.pipeline);
-
-            // for each mesh
-            for (int j = 0; j < scene->meshes.size(); j++) {
-                
-                // if the mesh use the ith texture
-                if (scene->meshes[j].texture_index == i) {
-
-                    // bind the model matrix
-                    vkCmdBindDescriptorSets(
-                        commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        basic_graphic_pipeline.layout, 2, 1,
-                        &descriptorSets[descriptor_set_index + scene->textures.size() +
-                            scene->normal_maps.size() + j],
-                        0, nullptr
-                    );
-
-                    // draw call
-                    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(scene->meshes[j].indices.size()),
-                        1, scene->meshes[j].index_offset, scene->meshes[j].vertex_offset, 0);
-                }
-            }
+            render_basic_mesh(commandBuffer, i);
 
             // if normal mapping is disabled, draw meshes with normal map
             // the same way as meshes
-            if (!scene->enable_normal_map) {
-
-                // bind the pipeline that render the meshes_with_normal_map
-                // without normal mapping
-                vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    basic_t_graphic_pipeline.pipeline);
-
-                // for each mesh
-                for (int j = 0; j < scene->meshes_with_normal_map.size(); j++) {
-
-                    // if the mesh use the ith texture
-                    if (scene->meshes_with_normal_map[j].texture_index == i) {
-
-                        // bind the model matrix
-                        vkCmdBindDescriptorSets(
-                            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            basic_t_graphic_pipeline.layout, 2, 1,
-                            &descriptorSets[descriptor_set_index + scene->textures.size() +
-                            scene->normal_maps.size() + scene->meshes.size() + j],
-                            0, nullptr
-                        );
-
-                        // draw call
-                        vkCmdDrawIndexed(
-                            commandBuffer,
-                            static_cast<uint32_t>(scene->meshes_with_normal_map[j].indices.size()),
-                            1, scene->meshes_with_normal_map[j].index_offset,
-                            scene->meshes_with_normal_map[j].vertex_offset, 0
-                        );
-                    }
-                }
-            } else {
-
-                // bind normal mapping pipeline
-                vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    normal_mapping_pipeline.pipeline);
-
-                // for each mesh
-                for (int j = 0; j < scene->meshes_with_normal_map.size(); j++) {
-
-                    // if the mesh use the ith texture
-                    if (scene->meshes_with_normal_map[j].texture_index == i) {
-
-                        // bind the normal map and the model matrix
-                        std::vector<VkDescriptorSet> descriptor_sets = {
-                            descriptorSets[descriptor_set_index + scene->textures.size() +
-                            scene->meshes_with_normal_map[j].normal_map_index],
-                            descriptorSets[descriptor_set_index + scene->textures.size() +
-                            scene->normal_maps.size() + scene->meshes.size() + j]
-                        };
-                        vkCmdBindDescriptorSets(
-                            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            normal_mapping_pipeline.layout, 2, 2,
-                            descriptor_sets.data(),
-                            0, nullptr
-                        );
-
-                        // draw call
-                        vkCmdDrawIndexed(
-                            commandBuffer,
-                            static_cast<uint32_t>(scene->meshes_with_normal_map[j].indices.size()),
-                            1, scene->meshes_with_normal_map[j].index_offset,
-                            scene->meshes_with_normal_map[j].vertex_offset, 0
-                        );
-                    }
-                }
-            }
+            if (!scene->enable_normal_map)
+                render_normal_map_meshes_without_normal_map(commandBuffer, i);
+            else render_normal_map_meshes(commandBuffer, i);
         }
+    }
+
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+        
+        begin_command_buffer(commandBuffer);
+
+        begin_render_pass(commandBuffer, imageIndex);
+
+        set_viewport(commandBuffer);
+
+        set_scissor(commandBuffer);
+
+        render_all_meshes(commandBuffer);
 
         // Record dear imgui primitives into command buffer
         ImGui_ImplVulkan_RenderDrawData(imgui_draw_data, commandBuffer);
 
         vkCmdEndRenderPass(commandBuffer);
 
-        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
             throw std::runtime_error("failed to record command buffer!");
-        }
     }
 
     void createSyncObjects() {
