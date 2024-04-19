@@ -1,9 +1,8 @@
 #include "anti_alias.h"
 
-MSAA::MSAA(GPU* gpu_, ImageCreator* img_creator) {
+MSAA::MSAA(GPU* gpu_) {
 	msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 	gpu = gpu_;
-	imageCreator = img_creator;
 
 	VkPhysicalDeviceProperties physicalDeviceProperties;
 	vkGetPhysicalDeviceProperties(gpu->physical_gpu, &physicalDeviceProperties);
@@ -40,13 +39,14 @@ void MSAA::setSampleCount(VkSampleCountFlagBits sample_count) {
 }
 
 void MSAA::createColorResources(VkFormat swapChainImageFormat, VkExtent2D swapChainExtent) {
-	imageCreator->createImage(swapChainExtent.width, swapChainExtent.height, msaaSamples, swapChainImageFormat, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, colorImage);
+	gpu->createImage(swapChainExtent.width, swapChainExtent.height, msaaSamples, swapChainImageFormat,
+		VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, colorImage);
 	VkMemoryRequirements memRequirements;
 	vkGetImageMemoryRequirements(gpu->logical_gpu, colorImage, &memRequirements);
 
 	gpu->allocateMemory(memRequirements.size, gpu->findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT), colorImageMemory);
 	vkBindImageMemory(gpu->logical_gpu, colorImage, colorImageMemory, 0);
-	colorImageView = imageCreator->createImageView(colorImage, swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+	colorImageView = gpu->createImageView(colorImage, swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 VkImageView MSAA::getColorImageView() {

@@ -27,7 +27,6 @@
 #include "load_model.h"
 #include "light.h"
 #include "anti_alias.h"
-#include "image.h"
 #include "render_pass.h"
 #include "math.h"
 #include "scene.h"
@@ -84,8 +83,6 @@ private:
     VkSurfaceKHR surface;
 
     GPU gpu;
-
-    ImageCreator* imageCreator;
 
     MSAA* msaa;
 
@@ -231,9 +228,8 @@ private:
 
         // instantiate GPU
         gpu = GPU(instance, surface);
-        imageCreator = new ImageCreator(gpu.logical_gpu);
         createSwapChain();
-        msaa = new MSAA(&gpu, imageCreator);
+        msaa = new MSAA(&gpu);
         msaa->setSampleCount(VK_SAMPLE_COUNT_4_BIT);
         createImageViews();
         renderPass = new RenderPass(gpu.logical_gpu, swapChainImageFormat, findDepthFormat(), msaa->getSampleCount());
@@ -295,7 +291,7 @@ private:
         scene->debug_mode = false;
         scene->enable_normal_map = false;
         scene->lights = light();
-        scene->lights.load_file("config/directional_lights.txt");
+        scene->lights.load_file("config/all_lights.txt");
         fubo.lights = scene->lights;
 
         // create VkImage and VkImageView for textures
@@ -396,7 +392,6 @@ private:
         vkFreeMemory(gpu.logical_gpu, normalMapImageMemory, nullptr);
 
         delete msaa;
-        delete imageCreator;
 
         delete scene;
 
@@ -553,8 +548,8 @@ private:
         VkDeviceSize totalRequiredSize = 0;
         uint32_t typeFilter = UINT32_MAX;
         for (int i = 0; i < scene->textures.size(); i++) {
-            imageCreator->createImage(static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]),
-                VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, textureImage[i]);
+            gpu.createImage(static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]), VK_SAMPLE_COUNT_1_BIT,
+                VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, textureImage[i]);
             vkGetImageMemoryRequirements(gpu.logical_gpu, textureImage[i], &memRequirements[i]);
             totalRequiredSize += memRequirements[i].size;
             typeFilter &= memRequirements[i].memoryTypeBits;
@@ -590,7 +585,7 @@ private:
     void createTextureImageViews() {
         textureImageView.resize(scene->textures.size());
         for (int i = 0; i < scene->textures.size(); i++) {
-            textureImageView[i] = imageCreator->createImageView(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+            textureImageView[i] = gpu.createImageView(textureImage[i], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
         }
     }
 
@@ -675,12 +670,8 @@ private:
         VkDeviceSize totalRequiredSize = 0;
         uint32_t typeFilter = UINT32_MAX;
         for (int i = 0; i < scene->normal_maps.size(); i++) {
-            imageCreator->createImage(
-                static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]),
-                VK_SAMPLE_COUNT_1_BIT, format,
-                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                normalMapImage[i]
-            );
+            gpu.createImage(static_cast<uint32_t>(texWidth[i]), static_cast<uint32_t>(texHeight[i]), VK_SAMPLE_COUNT_1_BIT,
+                format, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, normalMapImage[i]);
             vkGetImageMemoryRequirements(gpu.logical_gpu, normalMapImage[i], &memRequirements[i]);
             totalRequiredSize += memRequirements[i].size;
             typeFilter &= memRequirements[i].memoryTypeBits;
@@ -729,8 +720,7 @@ private:
     void createNormalMapImageViews(VkFormat format) {
         normalMapImageView.resize(scene->normal_maps.size());
         for (int i = 0; i < scene->normal_maps.size(); i++) {
-            normalMapImageView[i] = imageCreator->createImageView(
-                normalMapImage[i], format, VK_IMAGE_ASPECT_COLOR_BIT);
+            normalMapImageView[i] = gpu.createImageView(normalMapImage[i], format, VK_IMAGE_ASPECT_COLOR_BIT);
         }
     }
 
@@ -877,7 +867,7 @@ private:
         swapChainImageViews.resize(swapChainImages.size());
 
         for (size_t i = 0; i < swapChainImages.size(); i++) {
-            swapChainImageViews[i] = imageCreator->createImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+            swapChainImageViews[i] = gpu.createImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
         }
     }
 
@@ -954,14 +944,15 @@ private:
 
     void createDepthResources() {
         VkFormat depthFormat = findDepthFormat();
-        imageCreator->createImage(swapChainExtent.width, swapChainExtent.height, msaa->getSampleCount(), depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depthImage);
+        gpu.createImage(swapChainExtent.width, swapChainExtent.height, msaa->getSampleCount(),
+            depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depthImage);
         VkMemoryRequirements memRequirements;
         vkGetImageMemoryRequirements(gpu.logical_gpu, depthImage, &memRequirements);
         gpu.allocateMemory(memRequirements.size,
             gpu.findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
             depthImageMemory);
         vkBindImageMemory(gpu.logical_gpu, depthImage, depthImageMemory, 0);
-        depthImageView = imageCreator->createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+        depthImageView = gpu.createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
