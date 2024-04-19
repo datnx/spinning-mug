@@ -1,6 +1,6 @@
 #include "anti_alias.h"
 
-MSAA::MSAA(GPU* gpu_) {
+MSAA::MSAA(GPU* gpu_, VkFormat swapChainImageFormat, VkExtent2D swapChainExtent) {
 	msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 	gpu = gpu_;
 
@@ -15,9 +15,9 @@ MSAA::MSAA(GPU* gpu_) {
 	else if (counts & VK_SAMPLE_COUNT_2_BIT) max_msaaSamples = VK_SAMPLE_COUNT_2_BIT;
 	else max_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
-	colorImage = VK_NULL_HANDLE;
-	colorImageMemory = VK_NULL_HANDLE;
-	colorImageView = VK_NULL_HANDLE;
+	msaaSamples = (max_msaaSamples >= VK_SAMPLE_COUNT_4_BIT) ? VK_SAMPLE_COUNT_4_BIT : max_msaaSamples;
+
+	createColorResources(swapChainImageFormat, swapChainExtent);
 }
 
 void MSAA::destroyColorResources() {

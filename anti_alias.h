@@ -12,7 +12,7 @@ private:
 	VkImageView colorImageView;
 
 public:
-	MSAA(GPU* gpu_);
+	MSAA(GPU* gpu_, VkFormat swapChainImageFormat, VkExtent2D swapChainExtent);
 	VkSampleCountFlagBits getMaxUsableSampleCount();
 	VkSampleCountFlagBits getSampleCount();
 	void setSampleCount(VkSampleCountFlagBits sample_count);

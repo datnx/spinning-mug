@@ -221,54 +221,41 @@ private:
         }
     }
 
-    void initVulkan() {
-        createInstance();
-        setupDebugMessenger();
-        createSurface();
-
-        // instantiate GPU
-        gpu = GPU(instance, surface);
-        createSwapChain();
-        msaa = new MSAA(&gpu);
-        msaa->setSampleCount(VK_SAMPLE_COUNT_4_BIT);
-        createImageViews();
-        renderPass = new RenderPass(gpu.logical_gpu, swapChainImageFormat, findDepthFormat(), msaa->getSampleCount());
+    void create_graphic_pipelines() {
         createDescriptorSetLayout();
 
         std::vector<VkDescriptorSetLayout> setLayouts =
-            {descriptorSetLayout_0, descriptorSetLayout_1, descriptorSetLayout_2};
-        
+            { descriptorSetLayout_0, descriptorSetLayout_1, descriptorSetLayout_2 };
+
         // create the basic pipeline to render basic meshes
-        basic_graphic_pipeline.create(
-            &gpu, msaa, renderPass->getRenderPass(),
-            "shaders/vert.spv", "shaders/frag.spv",
-            Vertex::getBindingDescription(),
-            Vertex::getAttributeDescriptions(),
-            setLayouts
-        );
+        basic_graphic_pipeline.create(&gpu, msaa, renderPass->getRenderPass(),
+            "shaders/vert.spv", "shaders/frag.spv", Vertex::getBindingDescription(),
+            Vertex::getAttributeDescriptions(), setLayouts);
 
         // create a graphic pipeline that takes vertex with tangent
         // and render it without normal mapping
-        basic_t_graphic_pipeline.create(
-            &gpu, msaa, renderPass->getRenderPass(),
-            "shaders/vert_t.spv", "shaders/frag.spv",
-            VertexWithTangent::getBindingDescription(),
-            VertexWithTangent::getAttributeDescriptions(),
-            setLayouts
-        );
+        basic_t_graphic_pipeline.create(&gpu, msaa, renderPass->getRenderPass(),
+            "shaders/vert_t.spv", "shaders/frag.spv", VertexWithTangent::getBindingDescription(),
+            VertexWithTangent::getAttributeDescriptions(), setLayouts);
 
         // create normal mapping pipeline
         setLayouts[2] = descriptorSetLayout_1;
         setLayouts.push_back(descriptorSetLayout_2);
-        normal_mapping_pipeline.create(
-            &gpu, msaa, renderPass->getRenderPass(),
+        normal_mapping_pipeline.create(&gpu, msaa, renderPass->getRenderPass(),
             "shaders/normal_mapping_vert.spv", "shaders/normal_mapping_frag.spv",
             VertexWithTangent::getBindingDescription(),
-            VertexWithTangent::getAttributeDescriptions(),
-            setLayouts
-        );
-        
-        msaa->createColorResources(swapChainImageFormat, swapChainExtent);
+            VertexWithTangent::getAttributeDescriptions(), setLayouts);
+    }
+
+    void initVulkan() {
+        createInstance();
+        setupDebugMessenger();
+        createSurface();
+        gpu = GPU(instance, surface);
+        createSwapChain();
+        msaa = new MSAA(&gpu, swapChainImageFormat, swapChainExtent);
+        renderPass = new RenderPass(gpu.logical_gpu, swapChainImageFormat, findDepthFormat(), msaa->getSampleCount());
+        create_graphic_pipelines();
         createDepthResources();
         createFramebuffers();
         createTextureSampler();
@@ -861,6 +848,8 @@ private:
 
         swapChainImageFormat = surfaceFormat.format;
         swapChainExtent = extent;
+
+        createImageViews();
     }
 
     void createImageViews() {
