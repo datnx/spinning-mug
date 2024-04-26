@@ -57,7 +57,31 @@ add_subdirectory(external/glfw)
 
 find_package(Vulkan)
 
+set(SHADERS
+	${PROJECT_SOURCE_DIR}/shaders/shader.vert
+	${PROJECT_SOURCE_DIR}/shaders/shader_t.vert
+	${PROJECT_SOURCE_DIR}/shaders/shader.frag
+	${PROJECT_SOURCE_DIR}/shaders/normal_mapping.vert
+	${PROJECT_SOURCE_DIR}/shaders/normal_mapping.frag)
+
+foreach(GLSL ${SHADERS})
+    get_filename_component(FILE_NAME ${GLSL} NAME)
+    set(SPIRV "${PROJECT_SOURCE_DIR}/shaders/${FILE_NAME}.spv")
+	message("${SPIRV}")
+    add_custom_command(
+        OUTPUT ${SPIRV}
+        COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${GLSL} -o ${SPIRV}
+        DEPENDS ${GLSL})
+	list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+endforeach(GLSL)
+
+add_custom_target(shaders DEPENDS ${SPIRV_BINARY_FILES})
+
 add_executable(spinning-mug ${SM_SOURCE} ${SM_HEADERS})
+
+set_property(TARGET spinning-mug PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+add_dependencies(spinning-mug shaders)
 
 target_include_directories(spinning-mug
 	PRIVATE ${Vulkan_INCLUDE_DIR}

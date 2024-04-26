@@ -229,20 +229,20 @@ private:
 
         // create the basic pipeline to render basic meshes
         basic_graphic_pipeline.create(&gpu, msaa, renderPass->getRenderPass(),
-            "shaders/vert.spv", "shaders/frag.spv", Vertex::getBindingDescription(),
+            "shaders/shader.vert.spv", "shaders/shader.frag.spv", Vertex::getBindingDescription(),
             Vertex::getAttributeDescriptions(), setLayouts);
 
         // create a graphic pipeline that takes vertex with tangent
         // and render it without normal mapping
         basic_t_graphic_pipeline.create(&gpu, msaa, renderPass->getRenderPass(),
-            "shaders/vert_t.spv", "shaders/frag.spv", VertexWithTangent::getBindingDescription(),
+            "shaders/shader_t.vert.spv", "shaders/shader.frag.spv", VertexWithTangent::getBindingDescription(),
             VertexWithTangent::getAttributeDescriptions(), setLayouts);
 
         // create normal mapping pipeline
         setLayouts[2] = descriptorSetLayout_1;
         setLayouts.push_back(descriptorSetLayout_2);
         normal_mapping_pipeline.create(&gpu, msaa, renderPass->getRenderPass(),
-            "shaders/normal_mapping_vert.spv", "shaders/normal_mapping_frag.spv",
+            "shaders/normal_mapping.vert.spv", "shaders/normal_mapping.frag.spv",
             VertexWithTangent::getBindingDescription(),
             VertexWithTangent::getAttributeDescriptions(), setLayouts);
     }
