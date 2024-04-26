@@ -1,5 +1,5 @@
 #include <cmath>
-#include "math.h"
+#include "sm_math.h"
 #include "transform.h"
 
 glm::mat4 change_basis(glm::mat4 init, glm::vec3 new_x, glm::vec3 new_y, glm::vec3 new_z) {

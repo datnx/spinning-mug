@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "camera.h"
-#include "math.h"
+#include "sm_math.h"
 
 Camera::Camera(glm::vec3 pos, glm::vec3 front, glm::vec3 up) {
 	cameraPos = pos;

@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <utility>
 
-#include "math.h"
+#include "sm_math.h"
 #include "load_model.h"
 #include "string_utils.h"
 

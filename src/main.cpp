@@ -28,7 +28,7 @@
 #include "light.h"
 #include "anti_alias.h"
 #include "render_pass.h"
-#include "math.h"
+#include "sm_math.h"
 #include "scene.h"
 #include "pipeline.h"
 #include "imgui.h"

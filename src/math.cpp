@@ -1,6 +1,6 @@
 #include <glm/gtc/matrix_access.hpp>
 #include <cmath>
-#include "math.h"
+#include "sm_math.h"
 
 glm::vec3 normalize(glm::vec3 vector) {
 	float magnitude = sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
