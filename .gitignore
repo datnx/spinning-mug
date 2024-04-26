@@ -1,0 +1,6 @@
+*.spv
+.vs/
+build/
+imgui.ini
+3d_models/
+config/
