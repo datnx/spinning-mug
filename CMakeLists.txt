@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(GLFW_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/external/glfw/include")
 set(GLM_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/external/glm")
 set(STB_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/external/stb")
+set(IMGUI_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/external/imgui")
 set(SM_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include")
 
 set(SM_HEADERS
@@ -14,14 +15,6 @@ set(SM_HEADERS
 	${PROJECT_SOURCE_DIR}/include/buffer.h
 	${PROJECT_SOURCE_DIR}/include/camera.h
 	${PROJECT_SOURCE_DIR}/include/gpu.h
-	${PROJECT_SOURCE_DIR}/include/imconfig.h
-	${PROJECT_SOURCE_DIR}/include/imgui.h
-	${PROJECT_SOURCE_DIR}/include/imgui_impl_glfw.h
-	${PROJECT_SOURCE_DIR}/include/imgui_impl_vulkan.h
-	${PROJECT_SOURCE_DIR}/include/imgui_internal.h
-	${PROJECT_SOURCE_DIR}/include/imstb_rectpack.h
-	${PROJECT_SOURCE_DIR}/include/imstb_textedit.h
-	${PROJECT_SOURCE_DIR}/include/imstb_truetype.h
 	${PROJECT_SOURCE_DIR}/include/light.h
 	${PROJECT_SOURCE_DIR}/include/load_model.h
 	${PROJECT_SOURCE_DIR}/include/sm_math.h
@@ -37,12 +30,12 @@ set(SM_SOURCE
 	${PROJECT_SOURCE_DIR}/src/buffer.cpp
 	${PROJECT_SOURCE_DIR}/src/camera.cpp
 	${PROJECT_SOURCE_DIR}/src/gpu.cpp
-	${PROJECT_SOURCE_DIR}/src/imgui.cpp
-	${PROJECT_SOURCE_DIR}/src/imgui_draw.cpp
-	${PROJECT_SOURCE_DIR}/src/imgui_impl_glfw.cpp
-	${PROJECT_SOURCE_DIR}/src/imgui_impl_vulkan.cpp
-	${PROJECT_SOURCE_DIR}/src/imgui_tables.cpp
-	${PROJECT_SOURCE_DIR}/src/imgui_widgets.cpp
+	${PROJECT_SOURCE_DIR}/external/imgui/imgui.cpp
+	${PROJECT_SOURCE_DIR}/external/imgui/imgui_draw.cpp
+	${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_glfw.cpp
+	${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_vulkan.cpp
+	${PROJECT_SOURCE_DIR}/external/imgui/imgui_tables.cpp
+	${PROJECT_SOURCE_DIR}/external/imgui/imgui_widgets.cpp
 	${PROJECT_SOURCE_DIR}/src/light.cpp
 	${PROJECT_SOURCE_DIR}/src/load_model.cpp
 	${PROJECT_SOURCE_DIR}/src/main.cpp
@@ -88,6 +81,7 @@ target_include_directories(spinning-mug
 	PRIVATE ${GLFW_INCLUDE_DIRS}
 	PRIVATE ${GLM_INCLUDE_DIRS}
 	PRIVATE ${STB_INCLUDE_DIRS}
+	PRIVATE ${IMGUI_INCLUDE_DIRS}
 	PRIVATE ${SM_INCLUDE_DIRS})
 
 target_link_libraries(spinning-mug ${Vulkan_LIBRARY} glfw)

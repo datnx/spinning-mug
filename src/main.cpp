@@ -32,8 +32,8 @@
 #include "scene.h"
 #include "pipeline.h"
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_vulkan.h"
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -190,7 +190,8 @@ private:
         init_info.MinImageCount = 2;
         init_info.ImageCount = swapChainImages.size();
         init_info.MSAASamples = msaa->getSampleCount();
-        ImGui_ImplVulkan_Init(&init_info, renderPass->getRenderPass());
+        init_info.RenderPass = renderPass->getRenderPass();
+        ImGui_ImplVulkan_Init(&init_info);
     }
 
     void initWindow() {
