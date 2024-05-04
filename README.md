@@ -11,6 +11,11 @@ I'm creating a Vulkan renderer from scratch to learn graphic programming.
 * Point light, spot light, directional light
 * Texture mapping
 
+## Usage
+1. Download the latest release [here](https://github.com/datnx/spinning-mug/releases/download/v0.3/spinning-mug-v0.3.zip).
+2. Extract archive contents.
+3. Run spinning-mug.exe.
+
 ## Controls
 * `W`/`A`/`S`/`D` - camera movement.
 * `Mouse` - move to look around.
