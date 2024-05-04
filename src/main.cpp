@@ -64,7 +64,7 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
     }
 }
 
-class HelloTriangleApplication {
+class Application {
 public:
     void run() {
         initWindow();
@@ -211,12 +211,12 @@ private:
     }
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-        auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
+        auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
         app->framebufferResized = true;
     }
 
     static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
-        auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
+        auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
         if (!app->scene->debug_mode) {
             app->scene->camera.mouse_callback(xpos, ypos);
         }
@@ -1732,7 +1732,7 @@ private:
 };
 
 int main() {
-    HelloTriangleApplication app;
+    Application app;
 
     try {
         app.run();
