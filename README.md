@@ -11,20 +11,13 @@ I'm creating a Vulkan renderer from scratch to learn graphic programming.
 * Point light, spot light, directional light
 * Texture mapping
 
-## Usage
-1. Download the latest release [here](https://github.com/datnx/spinning-mug/releases/download/v0.3/spinning-mug-v0.3.zip).
-2. Extract archive contents.
-3. Run spinning-mug.exe.
-
-## Controls
-* `W`/`A`/`S`/`D` - camera movement.
-* `Mouse` - move to look around.
-* `T` - toggle UI.
-* `ESC` - close application.
+## Dependencies
+* [glfw](https://github.com/glfw/glfw)
+* [imgui](https://github.com/ocornut/imgui)
+* [stb](https://github.com/nothings/stb)
+* [glm](https://github.com/g-truc/glm)
 
 ## Building
-
-### Windows
 Tested on: Windows 11 Pro version 23H2
 
 Prerequisites
@@ -39,11 +32,17 @@ mkdir build
 cmake -S . -B build
 ```
 
-## Dependencies
-* [glfw](https://github.com/glfw/glfw)
-* [imgui](https://github.com/ocornut/imgui)
-* [stb](https://github.com/nothings/stb)
-* [glm](https://github.com/g-truc/glm)
+## Usage
+1. Follow the build instructions and generate spinning-mug.exe.
+1. Download the latest release [here](https://github.com/datnx/spinning-mug/releases/download/v0.3/spinning-mug-v0.3.1.zip).
+2. Extract and copy config and 3d_models folders to the root of the cloned repo.
+3. Run spinning-mug.exe through Visual Studio.
+
+## Controls
+* `W`/`A`/`S`/`D` - camera movement.
+* `Mouse` - move to look around.
+* `T` - toggle UI.
+* `ESC` - close application.
 
 ## License
 ```
